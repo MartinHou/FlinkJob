@@ -11,7 +11,6 @@ from pyflink.common.typeinfo import Types
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor
 
-from lib.service.notify import notify_client
 import requests
 
 logger = logging.getLogger(__name__)
