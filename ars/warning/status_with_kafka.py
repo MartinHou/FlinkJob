@@ -34,7 +34,13 @@ class NodeMonitor(FlatMapFunction):
     def __init__(self) -> None:
         self.fault_timer = None
         self.fault_timer_descriptor_name = "fault_timer"
-        
+        self.warning_api = "https://ars-dev.ddinfra.momenta.works/api/v1/notification/warn/"
+        self.mq_message_source = "ars_node_monitor"
+        self.mq_message_type = "ARSNodeMonitor"
+        self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
+        self.warning_assignees = ["ou_0c135f719351847da272c21880f9b96f"]
+        self.warning_assignees_str = " ".join([self.assign_someone(user) for user in self.warning_assignees])
+    
     def open(self, context: RuntimeContext) -> None:
         # fault_time is a map state, key is fault type, value is timestamp
         descriptor = MapStateDescriptor(
@@ -52,14 +58,17 @@ class NodeMonitor(FlatMapFunction):
                     self.fault_timer.put(value.fault_type, value.timestamp)
                     # TODO: send alert
                     requests.post(
-                        url='https://ars-dev.ddinfra.momenta.works/api/v1/notification/warn/',
+                        url=self.warning_api,
                         json={
-                            "user_id": "oc_d29ae06fec6bc5d6a35583157cea6285",
-                            "info": f'FAULT! {value.fault_type} on machine {value.node_name} in cluter {value.cluster_name} found at {datetime.datetime.fromtimestamp(value.timestamp)}. <at open_id=\"ou_0c135f719351847da272c21880f9b96f\"> </at>',
+                            "user_id": self.warning_chat_group,
+                            "info": f"FAULT! {value.fault_type} on machine {value.node_name}" + \
+                                    f"in cluter {value.cluster_name} found at " + \
+                                    f"{datetime.datetime.fromtimestamp(value.timestamp)}. " + \
+                                    self.warning_assignees_str,
                             "user_type": "chat",
-                            "source": "ars_node_monitor",
+                            "source": self.mq_message_source,
                             "level": "fault",
-                            "type": "ARSNodeMonitor",
+                            "type": self.mq_message_type,
                             "message_id": "1"
                         }
                     )
@@ -69,14 +78,17 @@ class NodeMonitor(FlatMapFunction):
                     fault_duration = value.timestamp - st_time
                     # TODO: send alert
                     requests.post(
-                        url='https://ars-dev.ddinfra.momenta.works/api/v1/notification/warn/',
+                        url=self.warning_api,
                         json={
-                            "user_id": "oc_d29ae06fec6bc5d6a35583157cea6285",
-                            "info": f'Recovery! {value.fault_type} on machine {value.node_name} in cluter {value.cluster_name} recovered at {datetime.datetime.fromtimestamp(value.timestamp)}. Fault duration: {int(fault_duration / 60)} minutes.',
+                            "user_id": self.warning_chat_group,
+                            "info": f"Recovery! {value.fault_type} on machine {value.node_name} " + \
+                                    f"in cluter {value.cluster_name} recovered at " + \
+                                    f"{datetime.datetime.fromtimestamp(value.timestamp)}. Fault " + \
+                                    f"duration: {int(fault_duration / 60)} minutes.",
                             "user_type": "chat",
-                            "source": "ars_node_monitor",
+                            "source": self.mq_message_source,
                             "level": "recovery",
-                            "type": "ARSNodeMonitor",
+                            "type": self.mq_message_type,
                             "message_id": "1"
                         }
                     )
@@ -87,6 +99,9 @@ class NodeMonitor(FlatMapFunction):
             logger.error('Error: %s', str(e)) 
             
         yield value
+
+    def assign_someone(self, user: str) -> str:
+        return f'<at open_id=\"{user}\"> </at>'
 
 
 def monitor_node(env: StreamExecutionEnvironment):
