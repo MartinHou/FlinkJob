@@ -21,11 +21,10 @@ if __name__ == '__main__':
     with open('/home/simon.feng/flink_demo/flink_demo/data.json') as f:
         data = dict(json.load(f))
     messages = list(data['workflow'])
-    messages1 = messages.copy()
-    messages.extend(messages1)
     messages = sorted(
         messages, key=lambda x: datetime_str_to_int(x['create_time']))
     for message in messages:
-        print(type(message['workflow_output']), message['workflow_output'])
+        print(message['create_time'])
+        time.sleep(1)
         producer.send(topic, value=json.dumps(message).encode('utf-8'))
     producer.close()

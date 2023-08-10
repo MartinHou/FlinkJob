@@ -4,21 +4,17 @@ from typing import Iterable
 import datetime
 import json
 from pyflink.common import (
-    Types, 
-    WatermarkStrategy,
-    Time, 
-    Duration,
+    Types,
 )
 from pyflink.datastream import (
     StreamExecutionEnvironment, 
-    ProcessWindowFunction, 
-    AggregateFunction,
     FlatMapFunction,
+    RuntimeContext,
 )
 from pyflink.common.watermark_strategy import TimestampAssigner
 from pyflink.datastream.connectors.kafka import  FlinkKafkaConsumer
 from pyflink.datastream.formats.json import  JsonRowDeserializationSchema
-from pyflink.datastream.window import TumblingEventTimeWindows, TimeWindow
+from pyflink.datastream.state import MapStateDescriptor
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +47,67 @@ KAFKA_TOPIC_OF_ARS_WORKFLOW = 'test_ars_workflow_statistics'
 KAFKA_SERVERS = "10.10.2.224:9092,10.10.2.81:9092,10.10.3.141:9092"
 KAFKA_CONSUMUER_GOURP_ID = "pyflink-ars"
 
+    
+class MyflatmapFunction(FlatMapFunction):
+    def __init__(self,tag:str='noraml') -> None:
+        self.tag=tag,
+        self.count_timer=None,
+        self.count_timer_name='count_timer'
+    def open(self, context: RuntimeContext) -> None:
+        descriptor = MapStateDescriptor(
+            name=self.count_timer_name, 
+            key_type_info=Types.INT(), 
+            value_type_info=Types.STRING(),
+        )
+        self.count_timer = context.get_map_state(descriptor)
+    def flat_map(self, value):
+        return_dict={'label':value['label'],
+                     'count_success':value['count_success'],
+                     'count_failure':value['count_failure'],
+                    'datetime_int':value['datetime_int'],
+                    'datetime':value['datetime']}
+        count_json=self.count_timer.get(value['datetime_int'])
+        if self.count_timer.is_empty():
+            max_time_int=0
+        else:
+            max_time_int=max(list(self.count_timer.keys()))
+        if count_json is None:
+            
+            self.count_timer.put(value['datetime_int'],json.dumps(return_dict))
+            if value['datetime_int']>max_time_int and max_time_int!=0:
+                print(self.count_timer.get(max_time_int),self.tag)
+            elif max_time_int==0:
+                pass
+            else:
+                print(self.count_timer.get(value['datetime_int']),self.tag)
+
+        else:
+            count_json=json.loads(count_json)
+            count_json['count_success']+=value['count_success']
+            count_json['count_failure']+=value['count_failure']
+            self.count_timer.put(value['datetime_int'],json.dumps(count_json))
+            if value['datetime_int']==max_time_int:
+                pass
+            else:
+                print(self.count_timer.get(value['datetime_int']),self.tag)
+        yield value
+        
 
 def datetime_str_to_int(datetime_str:str)->int:
-    datetime_object = datetime.datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+    datetime_YMD=datetime_str.split(' ')[0]
+    datetime_object = datetime.datetime.strptime(datetime_YMD, "%Y-%m-%d")
     date_int= int(time.mktime((datetime_object).timetuple()))
     return date_int
+def time_str_to_int(time_str:str)->int:
+    time_object = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+    time_int= int(time.mktime((time_object).timetuple()))
+    return time_int
+def datetime_obj_to_int(datetime)->int:
+    time_int= int(time.mktime((datetime).timetuple()))
+    return time_int
+def timestr_to_datestr(time_str:str)->str:
+    return time_str.split(' ')[0]
+
 
 class JSONTimestampAssigner(TimestampAssigner):
     def extract_timestamp(self, value, record_timestamp) -> int:
@@ -69,41 +121,14 @@ class JSONTimestampAssigner(TimestampAssigner):
 class Flatten(FlatMapFunction):
     def flat_map(self, value):
         workflow_output=json.loads(value.workflow_output)
+        count_success=0
+        count_failure=0
         for one in workflow_output['bag_replayed_list']:
             if one=='':
-                yield {'result':'failure','value':value}
+                count_failure+=1
             else:
-                yield {'result':'success','value':value}
-
-
-class CountAggFunction(AggregateFunction):
-    def __init__(self, tag:str='normal'):
-        self.tag = tag
-    def create_accumulator(self) -> int:
-        return 0
-
-    def add(self, value: dict, accumulator: int) -> int:
-        if self.tag=='normal':
-            return accumulator + 1
-
-
-    def get_result(self, accumulator) -> int:
-        return accumulator
-
-    def merge(self, a: int, b: int) -> tuple:
-        return a + b
-
-class AddMetaProcessFunction(
-        ProcessWindowFunction[tuple, tuple, str, TimeWindow]):
-    def __init__(self, tag:str='count'):
-        self.tag = tag
-
-    def process(self, key: str,
-                context: ProcessWindowFunction.Context[TimeWindow],
-                elements: Iterable[tuple]) -> Iterable[tuple]:
-        count = elements[0]
-        return dict(time=str(datetime.datetime.fromtimestamp(context.window().start * 1e-3)),
-               key= key, count=count,tag=self.tag).items()
+                count_success+=1
+        yield {'count_failure':count_failure,'count_success':count_success,'value':value}
 
 
 def read_from_kafka():
@@ -121,47 +146,72 @@ def read_from_kafka():
             ,
             'group.id':KAFKA_CONSUMUER_GOURP_ID,
         })
-
+    date_string = "2023-08-10 20:36:00"
+    date_object = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    date_int= int(int(
+            time.mktime((date_object).timetuple()))*1000)
     # 也可以使用set_start_from_timestamp
-    # kafka_consumer.set_start_from_earliest()
+    kafka_consumer.set_start_from_timestamp(date_int)
 
     return kafka_consumer
 
 
 def analyse(env: StreamExecutionEnvironment):
-    watermark_strategy = WatermarkStrategy.for_bounded_out_of_orderness(Duration.of_hours(2)) \
-        .with_timestamp_assigner(JSONTimestampAssigner())
 
     stream = env.add_source(read_from_kafka())
-    result= stream \
-       .assign_timestamps_and_watermarks(watermark_strategy)\
-       
-    result1=result.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
-        .filter(lambda x:x['result']=='success')\
-        .key_by(lambda x: x['value']['category'])\
-       .window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))\
-       .aggregate(CountAggFunction(), window_function=AddMetaProcessFunction(tag='Replay categories(bags)'))
-    result2=result.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
-        .key_by(lambda x: x['result'])\
-       .window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))\
-       .aggregate(CountAggFunction(), window_function=AddMetaProcessFunction(tag='Total replay processing'))
-    result3=result.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
-        .filter(lambda x:x['result']=='success')\
-        .key_by(lambda x: json.loads(x['value']['workflow_input'])['extra_args']['mode'])\
-       .window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))\
-       .aggregate(CountAggFunction(), window_function=AddMetaProcessFunction(tag='Replay modes'))
-    result4=result.flat_map(Flatten())\
-        .filter(lambda x:x['result']=='success')\
-        .key_by(lambda x: x['value']['workflow_type'])\
-       .window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))\
-       .aggregate(CountAggFunction(), window_function=AddMetaProcessFunction(tag='Successfully processed bags'))
 
-    result4.print()
+
+
+    result1=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
+        .map(lambda x:{'count_failure':x['count_failure'],
+                       'value':x['value'],
+                       'count_success':x['count_success'],
+                       'label':x['value']['category'],
+                       'datetime_int':datetime_str_to_int(x['value']['create_time']),
+                       'time_int':time_str_to_int(x['value']['create_time']),
+                       'time':x['value']['create_time'],
+                       'datetime':timestr_to_datestr(x['value']['create_time']),
+                       })\
+        .key_by(lambda x: x['label'])\
+       .flat_map(MyflatmapFunction(tag='Replay categories(bags)'))
+    result2=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
+        .map(lambda x:{'count_failure':x['count_failure'],
+                       'value':x['value'],
+                       'count_success':x['count_success'],
+                       'label':'normal',
+                       'datetime_int':datetime_str_to_int(x['value']['create_time']),
+                       'time_int':time_str_to_int(x['value']['create_time']),
+                       'time':x['value']['create_time'],
+                       'datetime':timestr_to_datestr(x['value']['create_time']),
+                       })\
+        .flat_map(MyflatmapFunction(tag='Total replay processing'))
+    result3=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
+        .map(lambda x:{'count_failure':x['count_failure'],
+                       'value':x['value'],
+                       'count_success':x['count_success'],
+                       'label':json.loads(x['value']['workflow_input'])['extra_args']['mode'],
+                       'datetime_int':datetime_str_to_int(x['value']['create_time']),
+                       'time_int':time_str_to_int(x['value']['create_time']),
+                       'time':x['value']['create_time'],
+                       'datetime':timestr_to_datestr(x['value']['create_time']),
+                       })\
+        .key_by(lambda x: x['label'])\
+        .flat_map(MyflatmapFunction(tag='Relay modes'))
+    result4=stream.flat_map(Flatten())\
+        .map(lambda x:{'count_failure':x['count_failure'],
+                       'value':x['value'],
+                       'count_success':x['count_success'],
+                       'label':x['value']['workflow_type'],
+                       'datetime_int':datetime_str_to_int(x['value']['create_time']),
+                       'time_int':time_str_to_int(x['value']['create_time']),
+                       'time':x['value']['create_time'],
+                       'datetime':timestr_to_datestr(x['value']['create_time']),
+                       })\
+        .key_by(lambda x: x['label']).flat_map(MyflatmapFunction(tag='Successfully processed bags'))
 
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    # jar path
     env.add_jars(
          "file:///home/simon.feng/flink_demo/flink_demo/flink-sql-connector-kafka-1.15.4.jar"
     )
