@@ -1,0 +1,52 @@
+{
+    "workflow": [
+        {
+            "workflow_id": "000000bc981443d18b3ac9838530b96b",
+            "workflow_type": "replay",
+            "workflow_name": "hnp_expert_robocar_20221121_20221208_20230113215243",
+            "user": "yu.zeng",
+            "workflow_input": "{\"release\": \"Devcar-V3.1.6-mainstream_cuda11_16826-20221208.689\", \"bag_list\": [\"fee8ba50f5e16ad8164ccded774aa724\", \"14ae3a5ef693d454e135cbfdada0e288\", \"f98a3bfb8adfb1151d4d4b1f9f4ee380\", \"5ab0714f6e03c0fceb7e71777d31695e\", \"60a29c6ac1f7b52e438337dab98f2e4c\", \"769ec3dcf11bf36b7e2b13b711bbee50\", \"2bc7c90aaba067fc19ce681620290007\", \"92c1ccdf200b1abb5c0177c4db811fea\", \"1b2a4ae73760ee3b47b03a9a5e5180fc\", \"62d858efe3d66713933f163afac63532\"], \"image_tag\": \"artifactory.momenta.works\/docker-momenta\/ars:robo_fix_2-main-V3.1.6\", \"entrypoint\": \"\/ars\/apps\/entrypoint.sh\", \"extra_args\": {\"mode\": \"HNP\", \"modules\": [\"camera_service\", \"camera_detection\", \"mock_system_manager\"], \"one_stage\": false, \"play_rate\": [\"0 1\", \"1 1\"], \"use_simu_time\": true, \"wait_fail_time\": 5, \"kept_bag_topics\": [\"\/hdmap\/localmap\", \"\/hdmap\/localmap\/map_offline\", \"\/mla\/egopose\", \"\/mla\/localization_result\", \"\/msd\/function_module_status\", \"\/msd\/planning\/plan\", \"\/msd\/prediction\/prediction_result\", \"\/param_aggregator\/config\", \"\/perception\/fusion\/object\", \"\/perception\/lidar\/object\/detection\", \"\/perception\/lidar\/object\/detection_raw\", \"\/perception\/radar\/result_front\", \"\/perception\/radar\/result_lc\", \"\/perception\/radar\/result_lr\", \"\/perception\/radar\/result_rc\", \"\/perception\/radar\/result_rr\", \"\/perception\/vision\/fusion\/traffic_light\", \"\/perception\/vision\/lane\", \"\/sensor\/camera_front_wide\/image_raw\/compressed\", \"\/sensor\/camera_front_wide\/video\", \"\/tf\", \"\/vehicle\/body_report\", \"\/vehicle\/chassis_report\", \"\/vehicle\/wheel_report\", \"\/worldmodel\/objects\", \"\/worldmodel\/processed_map\", \"\/worldmodel\/traffic_light\", \"\/mla\/egomotion_result\", \"\/perception\/vision\/localization\/sign_pole_lane\", \"\/sensor\/gnss_rtk\", \"\/sensor\/camera_front_mid\/video\", \"\/sensor\/camera_front_mid\/image_raw\/compressed\", \"\/system_manager\/map_manager\/request\", \"\/system_manager\/cp_planning\/control_cmd_request\", \"\/system_manager\/cp_planning\/request\", \"\/msd\/endpoint\/control_command\", \"\/system_manager\/map_manager\/route_request\"], \"target_for_wait\": \"vision_lane\", \"enable_frame_check\": true, \"enable_maf_convert\": false, \"extra_check_topics\": [], \"extra_remap_topics\": [], \"ignore_topic_check\": true, \"wait_perception_ok\": true, \"extra_algorithm_env\": null, \"extra_record_topics\": [\"\/sensor\/camera_front_mid\/cylinder\/image_raw\/compressed\"], \"override_check_topics\": {\"camera_detection\": [\"\/perception\/vision\/lane\"]}, \"record_using_header_time\": false}, \"target_storage\": \"mpilot-mcp-data-ext-obs-dxp\"}",
+            "workflow_output": "{\"bag_replayed_list\": [\"61d89f899af5e69525c201da43e6c06c\", \"\", \"015d22f652c8b9737fb28dcb71bf72ea\", \"5fce0dcc37ee1031048e7b4d15f696b6\", \"\", \"2496bc710dee63879662346f825dce30\", \"5e2f7a6c274f4ab77cc384e11887a3d6\", \"8d4a73d1e01f3208e347ab0dc5f87592\", \"7391bf974a27cb9c00d2b44cd1054349\", \"ae114598bb6b1dff6526219ae6676003\"]}",
+            "log": "[{\"md5\": \"56d6777d51e98b91ea1cf1171ae0a249\", \"name\": \"download-bags.log\"}, {\"md5\": \"c0c410caf33dbf2ae161a8d471818e6a\", \"name\": \"profile.json\"}, {\"md5\": \"0cad35219ac64a39d487c21e0e20555a\", \"name\": \"replay_bags.log\"}, {\"md5\": \"3a4840a9e4ac9a9d2b51934cb66a00bc\", \"name\": \"config.json\"}, {\"md5\": \"a9b013334a1be5e6f90c53fa41418567\", \"name\": \"entrypoint.log\"}, {\"md5\": \"88c7a867136c452d591c615b591384da\", \"name\": \"upload-bags.log\"}]",
+            "workflow_status": "SUCCESS",
+            "priority": 0,
+            "tag": "[]",
+            "create_time": "2022-01-13 22:01:18",
+            "update_time": "2022-01-14 23:43:14",
+            "batch_id_id": null,
+            "hook": "[{\"meta\": {\"env\": \"prod\", \"workflow_id\": \"v2^mpilot-perception^652e00de97fe4b6fc09c68635520ed56@high:431463c4-932b-40f0-8150-ac3d866456e3\", \"wait_task_ref_name\": \"ref_082031cd21730d1c8425dbd72f89dab1\"}, \"type\": \"ppl\"}]",
+            "device": "x86-3090",
+            "tos_id": null,
+            "device_num": 1,
+            "data_source": "DSS",
+            "category": "HNP-EFTP",
+            "upload_ttl": 30.0,
+            "bag_nums": 10,
+            "metric": "{}"
+        },
+        {
+            "workflow_id": "000000dfe17448b49c4da8124117db07",
+            "workflow_type": "maf_convert",
+            "workflow_name": "ddld-issue-bag-ddlane-d3277a0eb55511eda50efa163e68749f",
+            "user": "shaylon.li",
+            "workflow_input": "{\"release\": \"Devcar-V2.5.0-mainstream_cuda11_293-20220820.203\", \"bag_list\": [\"51b9c42e4bda6d98cb00484b42944ff2\", \"9f94e67368754f06b05a793db5d04410\", \"08e45aabe762935f91920869d2031e61\"], \"image_tag\": \"artifactory.momenta.works\/docker-momenta\/ars:1.0.5_rc5-main-V2.5.0\", \"entrypoint\": \"\/ars\/apps\/entrypoint.sh\", \"extra_args\": {\"mode\": \"CP\", \"modules\": [\"camera_service\", \"camera_detection\", \"mock_system_manager\"], \"one_stage\": false, \"play_rate\": [\"0 1\", \"1 1\"], \"use_simu_time\": true, \"wait_fail_time\": 2, \"kept_bag_topics\": [\"\/param_aggregator\/config\", \"\/sensor\/camera_front_wide\/image_raw\/compressed\", \"\/sensor\/camera_front_wide\/video\", \"\/sensor\/gnss_rtk\", \"\/mb\/sensor\/gnss_rtk\", \"\/mla\/egopose\", \"\/mla\/egomotion_result\", \"\/perception\/fusion\/object\", \"\/msd\/prediction\/prediction_result\", \"\/vehicle\/chassis_report\", \"\/vehicle\/wheel_report\", \"\/vehicle\/body_report\", \"\/perception\/vision\/lane\", \"\/msd\/function_module_status\", \"\/system_manager\/cp_planning\/control_cmd_request\", \"\/system_manager\/cp_planning\/request\", \"\/msd\/endpoint\/control_command\", \"\/sensor\/camera_front_far\/video\", \"\/sensor\/camera_front_mid\/video\", \"\/sensor\/camera_front_wide\/video\", \"\/sensor\/camera_front_fisheye\/video\", \"\/sensor\/camera_rear_fisheye\/video\", \"\/sensor\/camera_left_fisheye\/video\", \"\/sensor\/camera_right_fisheye\/video\", \"\/sensor\/camera_left_rear\/video\", \"\/sensor\/camera_right_rear\/video\", \"\/perception\/vision\/localization\/sign_pole_lane\"], \"target_for_wait\": \"vision_lane\", \"enable_frame_check\": true, \"enable_maf_convert\": false, \"ignore_topic_check\": false, \"wait_perception_ok\": true, \"record_using_header_time\": true}, \"target_storage\": \"mpilot-mcp-data-ext-obs-dxp\"}",
+            "workflow_output": "{\"bag_replayed_list\": [\"c1ef226f57f26700d75759ff91d47a6f\", \"b37e82c5dce0c7089acaa88f18d538c7\", \"ee18ce484985721c8283083081bc9f57\"]}",
+            "log": "[{\"md5\": \"e6b6278d52491583601b9ba917fbb85f\", \"name\": \"download-bags.log\"}, {\"md5\": \"1b993a0aa5ad0b694e5bc20ec19336d6\", \"name\": \"profile.json\"}, {\"md5\": \"0b41839c43a7572d098d63f3cfb2fb95\", \"name\": \"replay_bags.log\"}, {\"md5\": \"e586a26e017b1d556e05e44782d4fe9f\", \"name\": \"entrypoint.log\"}, {\"md5\": \"4319fbbc7256c6ec22438fa0a7baaf61\", \"name\": \"config.json\"}, {\"md5\": \"c31b699d6e71d48dc5d23d2fdf267732\", \"name\": \"upload-bags.log\"}]",
+            "workflow_status": "SUCCESS",
+            "priority": 1,
+            "tag": "[\"DDLD_ISSUE_ARS_FINISHED\", \"DDLD_ISSUE\"]",
+            "create_time": "2023-02-26 05:46:15",
+            "update_time": "2023-02-26 06:30:38",
+            "batch_id_id": "6814f3c379b74224b5fa9e7b648abbc1",
+            "hook": "[]",
+            "device": "x86-2080",
+            "tos_id": null,
+            "device_num": 1,
+            "data_source": "DSS",
+            "category": "DDLD",
+            "upload_ttl": 30.0,
+            "bag_nums": 3,
+            "metric": "{}"
+        }
+    ]
+}
