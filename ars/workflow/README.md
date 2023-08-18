@@ -1,0 +1,15 @@
+开发机密码还为simon
+
+所有代码配置好与flink相关的jar文件路径直接运行即可；
+
+test_ars_workflow_statistics.py为dashboard界面数据库生成流处理；
+test_ars_workflow_statistics_consuming.py为statistic界面数据库生成流处理；
+bag_level_crash.py 为bag_level_crash的数据生成；
+count_sql.py为每日sql数据统计；
+count_kafka.py为每日kafka数据统计；
+workflow_id_compare.py为两种数据来源差异化对比；
+workflow_date.json为当日sql计数的workflow_id结果；
+workflow_kafka_date.json为当日kafka计数的workflow_id结果；
+workflow_kafka_diff_sql_date.json为kafka区别与sql的计数结果；
+workflow_sql_diff_kafka_date.json为sql区别与kafka的计数结果；
+workflow_kafka_date_retry_dict.json为当日重试次数统计；
