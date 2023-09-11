@@ -62,15 +62,14 @@ Session = sessionmaker(bind=engine)
 
 
 class workflowActions:
-    def get_workflow(self, update_time):
+    def get_workflow(self, start_time, end_time):
         # 创建会话
         session = Session()
 
         # 找到要获取的统计记录
-        Workflows = session.query(
-            Workflow.workflow_id, Workflow.update_time,
-            Workflow.workflow_status).filter(
-                Workflow.update_time.like(f"%{update_time}%"),
+        Workflows = session.query(Workflow.workflow_id, Workflow.update_time).filter(
+                Workflow.update_time >= start_time,
+                Workflow.update_time <= end_time+timedelta(minutes=2),
                 or_(Workflow.workflow_status == "SUCCESS", Workflow.workflow_status == "FAILURE")
                )
 
@@ -83,12 +82,16 @@ class workflowActions:
 
 if __name__ == "__main__":
     workflow_object = workflowActions()
-    Workflows = workflow_object.get_workflow(START_YMD)
-    # print(Workflows.count())
+    Workflows = workflow_object.get_workflow(START_TIME, END_TIME)
     workflow_id_list = []
-    for one_workflow in Workflows:
-        # print(one_workflow)
-        workflow_id_list.append(one_workflow.workflow_id)
-    print(len(workflow_id_list))
+    workflow_might_be_in_kafka = []
+    for workflow in Workflows:
+        if workflow.update_time >= END_TIME:
+            workflow_might_be_in_kafka.append(workflow.workflow_id)
+        else:
+            workflow_id_list.append(workflow.workflow_id)
+    print(len(workflow_id_list),len(workflow_might_be_in_kafka))
     with open(get_sql_workflow_loc(),'w') as f:
         json.dump(workflow_id_list, f, indent=4)
+    with open(get_might_be_in_kafka_workflow_loc(),'w') as f:
+        json.dump(workflow_might_be_in_kafka, f, indent=4)

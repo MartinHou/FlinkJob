@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 LOG_URL = '/mnt/data/martin.hou/flink-jobs/ars/workflow/log'
 FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 
-START_TIME = datetime(2023, 9, 8, 0, 0, 0)
+START_TIME = datetime(2023, 9, 7, 0, 0, 0)
 END_TIME = START_TIME + timedelta(days=1)
-KILL_TIME = END_TIME + timedelta(hours=13)
+KILL_TIME = END_TIME + timedelta(hours=24)
 START_MON, START_DAY = START_TIME.strftime("%m-%d").split('-')
 START_YMD = START_TIME.strftime("%Y-%m-%d")
 

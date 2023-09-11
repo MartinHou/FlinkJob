@@ -17,7 +17,7 @@ if __name__ == "__main__":
         # 订阅的主题名
         'ars_prod_pod_result',
         bootstrap_servers=KAFKA_SERVERS,  # Kafka集群的地址
-        group_id='test-martin6',  # 这个消费者所在的组
+        group_id=f'test-{datetime.now()}',  # 这个消费者所在的组
         value_deserializer=lambda x: x.decode('utf-8'), 
         auto_offset_reset='earliest'
     )
@@ -47,22 +47,31 @@ if __name__ == "__main__":
         # 消费者会一直运行，除非按Ctrl+C
         workflow_list = []
         workflow_dict={}
+        workflow_might_be_in_sql = []
         for message in consumer:
             workflow_one = json.loads(message.value)
+            if workflow_one['workflow_status'] not in ('SUCCESS','FAILURE'):
+                continue
             workflow_id = workflow_one['workflow_id']
             update_time = datetime.strptime(workflow_one['update_time'], "%Y-%m-%d %H:%M:%S")
-            if update_time >= START_TIME and update_time < END_TIME:
-                print(update_time)
-                if workflow_id not in workflow_list:
-                    workflow_list.append(workflow_id)
-                else:
-                    if workflow_id in workflow_dict:
-                        workflow_dict[workflow_id]+=1
+            if update_time>=START_TIME-timedelta(minutes=2):
+                if update_time<START_TIME:  # might be in sql but it shouldnt be
+                    print('might be in sql but it shouldnt be: ',update_time)
+                    workflow_might_be_in_sql.append(workflow_id)
+                elif update_time < END_TIME:
+                    print(update_time)
+                    if workflow_id not in workflow_list:
+                        workflow_list.append(workflow_id)
                     else:
-                        workflow_dict[workflow_id]=2
-            elif update_time>KILL_TIME:
-                break
-        print(len(workflow_list),len(workflow_dict))
+                        if workflow_id in workflow_dict:
+                            workflow_dict[workflow_id]+=1
+                        else:
+                            workflow_dict[workflow_id]=2
+                elif update_time>KILL_TIME:
+                    break
+        print(len(workflow_list),len(workflow_dict),len(workflow_might_be_in_sql))
+        with open(get_might_be_in_sql_workflow_loc(),'w') as f:
+            json.dump(workflow_might_be_in_sql, f, indent=4)
         with open(get_kafka_workflow_loc(),'w') as f:
             json.dump(workflow_list, f, indent=4)
         with open(get_kafka_workflow_retry_loc(),'w') as f:
