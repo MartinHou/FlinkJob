@@ -1,2 +1,4 @@
 flink-1.17.1
 *.jar
+**/__pycache__
+ars/workflow/log

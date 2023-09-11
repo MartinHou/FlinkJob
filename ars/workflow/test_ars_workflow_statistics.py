@@ -16,6 +16,7 @@ from pyflink.datastream.connectors.kafka import  FlinkKafkaConsumer
 from pyflink.datastream.formats.json import  JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor
 from createsql import StatisticsActions
+from common.settings import *
 
 logger = logging.getLogger(__name__)
 
@@ -251,8 +252,9 @@ def read_from_kafka():
             ,
             'group.id':KAFKA_CONSUMUER_GOURP_ID,
         })
-    date_string = "2023-08-11 13:30:00"
-    date_object = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    # date_string = "2023-08-11 13:30:00"
+    # date_object = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    date_object = START_TIME
     date_int= int(int(
             time.mktime((date_object).timetuple()))*1000)
     kafka_consumer.set_start_from_timestamp(date_int)
@@ -325,7 +327,7 @@ if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
     env.add_jars(
-         "file:///home/simon.feng/flink_demo/flink_demo/flink-sql-connector-kafka-1.15.4.jar"
+         "file://"+FLINK_SQL_CONNECTOR_KAFKA_LOC
     )
     analyse(env)
     env.execute()
