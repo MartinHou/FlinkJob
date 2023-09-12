@@ -45,6 +45,7 @@ if __name__ == "__main__":
 
     try:
         # 消费者会一直运行，除非按Ctrl+C
+        success, failure = 0, 0
         workflow_list = []
         workflow_dict={}
         workflow_might_be_in_sql = []
@@ -56,9 +57,20 @@ if __name__ == "__main__":
             update_time = datetime.strptime(workflow_one['update_time'], "%Y-%m-%d %H:%M:%S")
             if update_time>=START_TIME-timedelta(minutes=2):
                 if update_time<START_TIME:  # might be in sql but it shouldnt be
-                    print('might be in sql but it shouldnt be: ',update_time)
+                    # print('might be in sql but it shouldnt be: ',update_time)
                     workflow_might_be_in_sql.append(workflow_id)
                 elif update_time < END_TIME:
+                    if workflow_one['workflow_status'] == 'SUCCESS':
+                        total = len(workflow_one['workflow_input']['bag_list'])
+                        succ, fail = 0,0
+                        for bag in workflow_one['workflow_output']['bag_replayed_list']:
+                            if bag:
+                                succ +=1
+                            else:
+                                fail +=1
+                        success+= succ
+                        failure+=fail
+                        assert succ+fail == total, f'{succ+fail} != {total}'
                     print(update_time)
                     if workflow_id not in workflow_list:
                         workflow_list.append(workflow_id)
@@ -70,6 +82,7 @@ if __name__ == "__main__":
                 elif update_time>KILL_TIME:
                     break
         print(len(workflow_list),len(workflow_dict),len(workflow_might_be_in_sql))
+        print('success:',success,'failure:',failure, 'total:',success+failure)
         with open(get_might_be_in_sql_workflow_loc(),'w') as f:
             json.dump(workflow_might_be_in_sql, f, indent=4)
         with open(get_kafka_workflow_loc(),'w') as f:
@@ -78,6 +91,7 @@ if __name__ == "__main__":
             json.dump(workflow_dict, f, indent=4)
 
     except KeyboardInterrupt:
+        print('success:',success,'failure:',failure, 'total:',success+failure)
         # 用户按了Ctrl+C，就退出程序
         print("Stopping consumer")
         consumer.close()

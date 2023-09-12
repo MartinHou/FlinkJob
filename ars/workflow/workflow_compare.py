@@ -20,9 +20,7 @@ if __name__ == "__main__":
         f'SQL len = {len(workflow_sql_set)}',
         f'Kafka len = {len(workflow_kafka_set)}',
         f'SQL-Kafka len = {len(workflow_sql_set-workflow_kafka_set)}',
-        f'Kafka-SQL len = {len(workflow_kafka_set-workflow_sql_set)}', 
-        f'Ruled out workflow in sql: {workflow_might_be_in_sql}',
-        f'Ruled out workflow in kafka: {workflow_might_be_in_kafka}',
+        f'Kafka-SQL len = {len(workflow_kafka_set-workflow_sql_set)}',
         sep='\n'
     )
     with open(get_kafka_diff_sql_workflow_loc(),'w') as f:

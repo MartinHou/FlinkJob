@@ -67,7 +67,7 @@ class workflowActions:
         session = Session()
 
         # 找到要获取的统计记录
-        Workflows = session.query(Workflow.workflow_id, Workflow.update_time).filter(
+        Workflows = session.query(Workflow.workflow_id, Workflow.update_time, Workflow.workflow_status, Workflow.workflow_output).filter(
                 Workflow.update_time >= start_time,
                 Workflow.update_time <= end_time+timedelta(minutes=2),
                 or_(Workflow.workflow_status == "SUCCESS", Workflow.workflow_status == "FAILURE")
@@ -85,12 +85,21 @@ if __name__ == "__main__":
     Workflows = workflow_object.get_workflow(START_TIME, END_TIME)
     workflow_id_list = []
     workflow_might_be_in_kafka = []
+    success,failure = 0,0
     for workflow in Workflows:
         if workflow.update_time >= END_TIME:
             workflow_might_be_in_kafka.append(workflow.workflow_id)
         else:
+            if workflow.workflow_status=='SUCCESS':
+                output_bags = workflow.workflow_output['bag_replayed_list']
+                for bag in output_bags:
+                    if bag:
+                        success += 1
+                    else:
+                        failure += 1
             workflow_id_list.append(workflow.workflow_id)
     print(len(workflow_id_list),len(workflow_might_be_in_kafka))
+    print('success:',success,'failure:',failure, 'total:',success+failure)
     with open(get_sql_workflow_loc(),'w') as f:
         json.dump(workflow_id_list, f, indent=4)
     with open(get_might_be_in_kafka_workflow_loc(),'w') as f:
