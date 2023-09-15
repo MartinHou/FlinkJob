@@ -1,29 +1,5 @@
 from datetime import datetime
 import time
-from pyflink.common import Types
-from pyflink.datastream.formats.json import JsonRowDeserializationSchema
-from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
-from common.settings import KAFKA_SERVERS
-
-
-def get_flink_kafka_consumer(schema, topic, group_id, start_date):
-    KEYS = [k for k in schema.keys()]
-    VALUES = [schema[k] for k in KEYS]
-    deserialization_schema = JsonRowDeserializationSchema.Builder() \
-        .type_info(Types.ROW_NAMED(KEYS, VALUES)) \
-        .build()
-    kafka_consumer = FlinkKafkaConsumer(
-        topics=topic,
-        deserialization_schema=deserialization_schema,
-        properties={
-            'bootstrap.servers': KAFKA_SERVERS,
-            'group.id': group_id,
-        })
-    date_object = start_date
-    kafka_consumer.set_start_from_timestamp(
-        int(date_object.timestamp()) * 1000)
-    return kafka_consumer
-
 
 def datetime_str_to_int(datetime_str: str) -> int:
     datetime_YMD = datetime_str.split(' ')[0]

@@ -1,5 +1,5 @@
 import json
-from common.urls import *
+from lib.common.urls import *
 
 if __name__ == "__main__":
     with open(get_kafka_workflow_loc(), 'r') as f:

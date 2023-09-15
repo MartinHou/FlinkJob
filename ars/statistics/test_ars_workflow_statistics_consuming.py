@@ -9,9 +9,10 @@ from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor
 from createsql import StatisticsActions
-from common.settings import *
-from common.utils import *
-from common.schema import TEST_ARS_WORKFLOW_SCHEMA
+from lib.common.settings import *
+from lib.utils.dates import *
+from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
+from lib.utils.kafka import get_flink_kafka_consumer
 
 logger = logging.getLogger(__name__)
 

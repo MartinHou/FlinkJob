@@ -2,7 +2,7 @@ from kafka import KafkaConsumer, TopicPartition
 from datetime import datetime, timedelta
 import time
 import json
-from common.urls import *
+from lib.common.urls import *
 
 
 def time_str_to_int(time_str: str) -> int:

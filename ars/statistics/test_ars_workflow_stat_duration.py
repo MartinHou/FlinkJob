@@ -1,4 +1,3 @@
-from common.settings import *
 from pyflink.common import Types
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
@@ -9,8 +8,10 @@ from datetime import datetime
 from createsql import StatisticsActions
 from pyflink.datastream import ProcessFunction, FilterFunction
 import json
-from common.utils import *
-from common.schema import TEST_ARS_BAG_SCHEMA
+from lib.common.settings import *
+from lib.utils.dates import *
+from lib.common.schema import TEST_ARS_BAG_SCHEMA
+from lib.utils.kafka import get_flink_kafka_consumer
 
 class Filter(FilterFunction):
     def filter(self, value):

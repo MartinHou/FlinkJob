@@ -16,7 +16,7 @@ from pyflink.common.watermark_strategy import TimestampAssigner
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor
-from common.settings import *
+from lib.common.settings import *
 
 logger = logging.getLogger(__name__)
 
