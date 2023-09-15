@@ -1,4 +1,4 @@
-from kafka import KafkaConsumer, TopicPartition
+from kafka import KafkaConsumer
 from datetime import datetime, timedelta
 import time
 import json
