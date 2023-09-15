@@ -2,7 +2,7 @@ import json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, String, BigInteger, DateTime, JSON, Integer, FLOAT, or_
 from sqlalchemy.ext.declarative import declarative_base
-from common.urls import *
+from lib.common.urls import *
 
 Base = declarative_base()
 

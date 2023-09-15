@@ -47,6 +47,7 @@ def run(action):
     file_types = ['*.py']
     sub_folders = [
         'ars',
+        'lib',
     ]
 
     print('format in [%s] with [%s]' % (', '.join(sub_folders),

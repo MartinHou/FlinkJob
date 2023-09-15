@@ -6,9 +6,10 @@ from pyflink.datastream import (
     StreamExecutionEnvironment,
     FlatMapFunction,
     RuntimeContext,
+    MapFunction,
 )
 from pyflink.datastream.state import MapStateDescriptor
-from createsql import StatisticsActions
+from lib.utils.sql import StatisticsActions
 from lib.common.settings import *
 from lib.utils.kafka import get_flink_kafka_consumer
 from lib.utils.dates import *
@@ -17,7 +18,34 @@ from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 logger = logging.getLogger(__name__)
 
 
-class MyflatmapFunction(FlatMapFunction):
+class AddPodCount(MapFunction):
+    def map(self, value):
+        return {
+            'value': value,
+            'count_failure': 1 if value['workflow_status'] == 'FAILURE' else 0,
+            'count_success': 1 if value['workflow_status'] == 'SUCCESS' else 0
+        }
+
+
+class AddBagCount(FlatMapFunction):
+    def flat_map(self, value):
+        workflow_output = json.loads(value.workflow_output)
+        count_success, count_failure = 0, 0
+        if 'bag_replayed_list' in workflow_output:
+            for one in workflow_output['bag_replayed_list']:
+                if one:
+                    count_success += 1
+                else:
+                    count_failure += 1
+            print(value['update_time'])
+            yield {
+                'count_failure': count_failure,
+                'count_success': count_success,
+                'value': value
+            }
+
+
+class HandleCountFlatMap(FlatMapFunction):
     def __init__(self, tag: str = 'noraml') -> None:
         self.tag = tag
         self.count_timer = None  # 分钟级:return_dict
@@ -183,46 +211,16 @@ class MyflatmapFunction(FlatMapFunction):
             self.day_count_timer.put(daytime_int, json.dumps(day_json))
 
 
-class PodFlatten(FlatMapFunction):
-    def flat_map(self, value):
-        yield {
-            'value': value,
-            'count_failure': 1 if value['workflow_status'] == 'FAILURE' else 0,
-            'count_success': 1 if value['workflow_status'] == 'SUCCESS' else 0
-        }
-
-
-class Flatten(FlatMapFunction):
-    def flat_map(self, value):
-
-        workflow_output = json.loads(value.workflow_output)
-
-        count_success = 0
-        count_failure = 0
-        if 'bag_replayed_list' in workflow_output:
-            for one in workflow_output['bag_replayed_list']:
-                if one:
-                    count_success += 1
-                else:
-                    count_failure += 1
-            print(value['update_time'])
-            yield {
-                'count_failure': count_failure,
-                'count_success': count_success,
-                'value': value
-            }
-
-
 def analyse(env: StreamExecutionEnvironment):
 
     stream = env.add_source(
         get_flink_kafka_consumer(
             schema=TEST_ARS_WORKFLOW_SCHEMA,
             topic=KAFKA_TOPIC_OF_ARS_WORKFLOW,
-            group_id='martin_test01',
+            group_id='martin_stat_pod',
             start_date=START_TIME))
 
-    result_pod = stream.flat_map(PodFlatten()).map(lambda x:{
+    stat_status_pod_group_by_type = stream.map(AddPodCount()).map(lambda x:{
         'count_failure': x['count_failure'],
         'value':x['value'],
         'count_success': x['count_success'],
@@ -234,9 +232,9 @@ def analyse(env: StreamExecutionEnvironment):
         'minutetime_int':timestr_to_minute_int(x['value']['update_time']),
         'minutetime':timestr_to_minutestr(x['value']['update_time']),
     }).key_by(lambda x: x['label'])\
-    .flat_map(MyflatmapFunction(tag='stat_status_pod_group_by_type'))
+    .flat_map(HandleCountFlatMap(tag='stat_status_pod_group_by_type'))
 
-    result1=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
+    stat_replay_status_bag_group_by_category=stream.filter(lambda x:x.workflow_type=='replay').flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
                        'value':x['value'],
                        'count_success':x['count_success'],
@@ -249,22 +247,8 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
         .key_by(lambda x: x['label'])\
-       .flat_map(MyflatmapFunction(tag='stat_replay_status_bag_group_by_category'))
-    # result2=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
-    #     .map(lambda x:{'count_failure':x['count_failure'],
-    #                    'value':x['value'],
-    #                    'count_success':x['count_success'],
-    #                    'label':'normal',
-    #                    'daytime_int':datetime_str_to_int(x['value']['update_time']),
-    #                    'time_int':time_str_to_int(x['value']['update_time']),
-    #                    'time':x['value']['update_time'],
-    #                    'daytime':timestr_to_datestr(x['value']['update_time']),
-    #                     'minutetime_int':timestr_to_minute_int(x['value']['update_time']),
-    #                    'minutetime':timestr_to_minutestr(x['value']['update_time']),
-    #                    })\
-    #     .key_by(lambda x: x['label'])\
-    #     .flat_map(MyflatmapFunction(tag='Total replay processing'))
-    result3=stream.filter(lambda x:x.workflow_type=='replay').flat_map(Flatten())\
+       .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_category'))
+    stat_replay_status_bag_group_by_mode=stream.filter(lambda x:x.workflow_type=='replay').flat_map(AddBagCount())\
         .filter(lambda x:'extra_args' in json.loads(x['value']['workflow_input'])
                           and 'mode' in json.loads(x['value']['workflow_input'])['extra_args'])\
         .map(lambda x:{'count_failure':x['count_failure'],
@@ -279,8 +263,8 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
         .key_by(lambda x: x['label'])\
-        .flat_map(MyflatmapFunction(tag='stat_replay_status_bag_group_by_mode'))
-    result4=stream.flat_map(Flatten())\
+        .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_mode'))
+    stat_status_bag_group_by_type=stream.flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
                        'value':x['value'],
                        'count_success':x['count_success'],
@@ -292,7 +276,7 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime_int':timestr_to_minute_int(x['value']['update_time']),
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
-        .key_by(lambda x: x['label']).flat_map(MyflatmapFunction(tag='stat_status_bag_group_by_type'))
+        .key_by(lambda x: x['label']).flat_map(HandleCountFlatMap(tag='stat_status_bag_group_by_type'))
 
 
 if __name__ == "__main__":

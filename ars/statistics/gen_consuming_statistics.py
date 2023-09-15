@@ -5,7 +5,7 @@ from pyflink.common import (
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, FilterFunction)
 from pyflink.datastream.state import MapStateDescriptor
-from createsql import StatisticsActions
+from lib.utils.sql import StatisticsActions
 from lib.common.settings import *
 from lib.utils.dates import *
 from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
@@ -14,32 +14,34 @@ from lib.utils.kafka import get_flink_kafka_consumer
 logger = logging.getLogger(__name__)
 
 
+class Filter(FilterFunction):
+    def filter(self, value):
+        return len(dict(json.loads(value.metric)).keys()) != 0
+
+
 class MyflatmapFunction(FlatMapFunction):
     def __init__(self, tag: str = 'noraml') -> None:
         self.tag = tag
-        self.count_timer = None
-        self.count_timer_name = 'count_timer'
-        self.day_count_timer = None,
-        self.day_count_timer_name = 'day_count_timer'
-        self.day_temp_timer = None
-        self.day_temp_timer_name = 'day_temp_timer_name'
+        self.count_timer = None  # 分钟级:return_dict
+        self.day_count_timer = None,  # day级: return_dict-minutes级时间戳
+        self.day_temp_timer = None,  # day级:占位的1?
         self.delay_time = 86400
 
     def open(self, context: RuntimeContext) -> None:
         descriptor = MapStateDescriptor(
-            name=self.count_timer_name,
+            name='count_timer',
             key_type_info=Types.INT(),
             value_type_info=Types.STRING(),
         )
         self.count_timer = context.get_map_state(descriptor)
         descriptor1 = MapStateDescriptor(
-            name=self.day_count_timer_name,
+            name='day_count_timer',
             key_type_info=Types.INT(),
             value_type_info=Types.STRING(),
         )
         self.day_count_timer = context.get_map_state(descriptor1)
         descriptor2 = MapStateDescriptor(
-            name=self.day_temp_timer_name,
+            name='day_temp_timer_name',
             key_type_info=Types.INT(),
             value_type_info=Types.INT(),
         )
@@ -130,8 +132,6 @@ class MyflatmapFunction(FlatMapFunction):
             }
         else:
             count_json_dict = json.loads(count_json)
-            if 'info' not in dict(count_json_dict):
-                print(count_json_dict)
             info = count_json_dict['info']
             if value['device'] not in info:
                 info[value['device']] = {
@@ -219,20 +219,15 @@ class MyflatmapFunction(FlatMapFunction):
         self.day_count_timer.put(daytime_int, json.dumps(day_json))
 
 
-class Filter(FilterFunction):
-    def filter(self, value):
-        return len(dict(json.loads(value.metric)).keys()) != 0
-
-
 def analyse(env: StreamExecutionEnvironment):
 
     stream = env.add_source(
         get_flink_kafka_consumer(
             schema=TEST_ARS_WORKFLOW_SCHEMA,
             topic=KAFKA_TOPIC_OF_ARS_WORKFLOW,
-            group_id='martin_test01',
+            group_id='martin_stat_consuming',
             start_date=START_TIME))
-    result1 = stream.filter(Filter()).map(
+    stat_replay_time_consuming_group_by_category = stream.filter(Filter()).map(
         lambda x: {
             'daytime_int': datetime_str_to_int(x.update_time),
             'time_int': time_str_to_int(x.update_time),

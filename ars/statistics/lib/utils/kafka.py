@@ -1,7 +1,8 @@
 from pyflink.common import Types
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
-from common.settings import KAFKA_SERVERS
+from lib.common.settings import KAFKA_SERVERS
+
 
 def get_flink_kafka_consumer(schema, topic, group_id, start_date):
     KEYS = [k for k in schema.keys()]

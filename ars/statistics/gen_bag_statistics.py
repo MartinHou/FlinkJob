@@ -3,7 +3,7 @@ from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext)
 from pyflink.datastream.state import MapStateDescriptor
 from datetime import datetime
-from createsql import StatisticsActions
+from lib.utils.sql import StatisticsActions
 from pyflink.datastream import ProcessFunction, FilterFunction
 import json
 from lib.common.settings import *
@@ -42,7 +42,7 @@ class AddTimeProcess(ProcessFunction):
         yield result
 
 
-class MyflatmapFunction(FlatMapFunction):
+class HandleDurationFlatMap(FlatMapFunction):
     def __init__(self, tag: str = 'noraml') -> None:
         self.tag = tag
         self.count_timer = None  # 分钟级:return_dict
@@ -185,10 +185,10 @@ def analyse(env):
         get_flink_kafka_consumer(
             schema=TEST_ARS_BAG_SCHEMA,
             topic=KAFKA_TOPIC_OF_ARS_BAG,
-            group_id='martin_test01',
+            group_id='martin_stat_bag',
             start_date=START_TIME))
 
-    result1=stream.filter(Filter())\
+    stat_replay_success_bag_duration_group_by_mode=stream.filter(Filter())\
         .process(AddTimeProcess())\
         .map(lambda x:
             {
@@ -202,9 +202,9 @@ def analyse(env):
                 'minutetime':timestr_to_minutestr(x['update_time']),
             })\
         .key_by(lambda x:x['label'])\
-        .flat_map(MyflatmapFunction(tag='stat_replay_success_bag_duration_group_by_mode'))
+        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_mode'))
 
-    result2=stream.filter(Filter())\
+    stat_replay_success_bag_duration_group_by_category=stream.filter(Filter())\
         .process(AddTimeProcess())\
         .map(lambda x:
             {
@@ -218,7 +218,7 @@ def analyse(env):
                 'minutetime':timestr_to_minutestr(x['update_time']),
             })\
         .key_by(lambda x:x['label'])\
-        .flat_map(MyflatmapFunction(tag='stat_replay_success_bag_duration_group_by_category'))
+        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_category'))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 
+
 def datetime_str_to_int(datetime_str: str) -> int:
     datetime_YMD = datetime_str.split(' ')[0]
     datetime_object = datetime.strptime(datetime_YMD, "%Y-%m-%d")
