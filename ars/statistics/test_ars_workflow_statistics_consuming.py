@@ -1,12 +1,9 @@
 import logging
-from datetime import datetime
 import json
 from pyflink.common import (
     Types, )
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, FilterFunction)
-from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
-from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor
 from createsql import StatisticsActions
 from lib.common.settings import *

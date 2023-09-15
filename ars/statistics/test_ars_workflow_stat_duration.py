@@ -1,6 +1,4 @@
 from pyflink.common import Types
-from pyflink.datastream.formats.json import JsonRowDeserializationSchema
-from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext)
 from pyflink.datastream.state import MapStateDescriptor
@@ -13,11 +11,13 @@ from lib.utils.dates import *
 from lib.common.schema import TEST_ARS_BAG_SCHEMA
 from lib.utils.kafka import get_flink_kafka_consumer
 
+
 class Filter(FilterFunction):
     def filter(self, value):
         return value.type=='replay' and value['status']=='SUCCESS' and value['output_bag']!='{}' \
             and 'bag_duration' in json.loads(value['metric'])
-            
+
+
 class AddTimeProcess(ProcessFunction):
     def process_element(self, value, ctx: ProcessFunction.Context):
         result = {
