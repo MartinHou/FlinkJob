@@ -1,6 +1,4 @@
 import logging
-import time
-from typing import Iterable
 from datetime import datetime
 import json
 from pyflink.common import (
@@ -17,33 +15,9 @@ from pyflink.datastream.state import MapStateDescriptor
 from createsql import StatisticsActions
 from common.settings import *
 from common.utils import *
+from common.schema import TEST_ARS_WORKFLOW_SCHEMA
 
 logger = logging.getLogger(__name__)
-
-TEST_ARS_WORKFLOW_SCHEMA = {
-    "workflow_id": Types.STRING(),
-    "workflow_type": Types.STRING(),
-    "workflow_name": Types.STRING(),
-    "category": Types.STRING(),
-    "device": Types.STRING(),
-    "device_num": Types.INT(),
-    "user": Types.STRING(),
-    "data_source": Types.STRING(),
-    "upload_ttl": Types.FLOAT(),
-    "bag_nums": Types.INT(),
-    "workflow_input": Types.STRING(),
-    'workflow_output': Types.STRING(),
-    'log': Types.STRING(),
-    'workflow_status': Types.STRING(),
-    'priority': Types.INT(),
-    'tag': Types.STRING(),
-    'hook': Types.STRING(),
-    'create_time': Types.STRING(),
-    'update_time': Types.STRING(),
-    'batch_id_id': Types.STRING(),
-    'tos_id': Types.STRING(),
-    'metric': Types.STRING(),
-}
 
 
 class MyflatmapFunction(FlatMapFunction):
@@ -242,29 +216,14 @@ class Flatten(FlatMapFunction):
             }
 
 
-def read_from_kafka():
-
-    KEYS = [k for k in TEST_ARS_WORKFLOW_SCHEMA.keys()]
-    VALUES = [TEST_ARS_WORKFLOW_SCHEMA[k] for k in KEYS]
-    deserialization_schema = JsonRowDeserializationSchema.Builder() \
-        .type_info(Types.ROW_NAMED(KEYS, VALUES)) \
-        .build()
-    kafka_consumer = FlinkKafkaConsumer(
-        topics=KAFKA_TOPIC_OF_ARS_WORKFLOW,
-        deserialization_schema=deserialization_schema,
-        properties={
-            'bootstrap.servers': KAFKA_SERVERS,
-            'group.id': f'test-{datetime.now()}',
-        })
-    date_object = START_TIME
-    kafka_consumer.set_start_from_timestamp(
-        int(date_object.timestamp()) * 1000)
-    return kafka_consumer
-
-
 def analyse(env: StreamExecutionEnvironment):
 
-    stream = env.add_source(read_from_kafka())
+    stream = env.add_source(
+        get_flink_kafka_consumer(
+            schema=TEST_ARS_WORKFLOW_SCHEMA,
+            topic=KAFKA_TOPIC_OF_ARS_WORKFLOW,
+            group_id='martin_test01',
+            start_date=START_TIME))
 
     result_pod = stream.flat_map(PodFlatten()).map(lambda x:{
         'count_failure': x['count_failure'],

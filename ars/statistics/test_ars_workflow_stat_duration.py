@@ -7,41 +7,16 @@ from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
 from pyflink.datastream.state import MapStateDescriptor
 from datetime import datetime
 from createsql import StatisticsActions
-from pyflink.datastream import ProcessFunction, MapFunction, FilterFunction
+from pyflink.datastream import ProcessFunction, FilterFunction
 import json
 from common.utils import *
+from common.schema import TEST_ARS_BAG_SCHEMA
 
-TEST_ARS_BAG_SCHEMA = {
-    'result_id': Types.STRING(),
-    'pod_id': Types.STRING(),
-    'job_id': Types.STRING(),
-    'type': Types.STRING(),
-    'node_name': Types.STRING(),
-    'cluster_name': Types.STRING(),
-    'status': Types.STRING(),
-    'pod_start_timestamp': Types.FLOAT(),
-    'playback_start_timestamp': Types.FLOAT(),
-    'playback_end_timestamp': Types.FLOAT(),
-    'device': Types.STRING(),
-    'device_num': Types.INT(),
-    'priority': Types.INT(),
-    'group': Types.STRING(),
-    'error_type': Types.STRING(),
-    'error_details': Types.STRING(),
-    'error_stage': Types.STRING(),
-    'log': Types.STRING(),
-    'data_source': Types.STRING(),
-    'input_bag': Types.STRING(),
-    'output_bag': Types.STRING(),
-    'metric': Types.STRING(),
-    'release': Types.STRING(),
-    'coredump': Types.STRING(),
-    'backtrace': Types.STRING(),
-    'final_attempt': Types.BOOLEAN(),
-    'config': Types.STRING(),
-}
-
-
+class Filter(FilterFunction):
+    def filter(self, value):
+        return value.type=='replay' and value['status']=='SUCCESS' and value['output_bag']!='{}' \
+            and 'bag_duration' in json.loads(value['metric'])
+            
 class AddTimeProcess(ProcessFunction):
     def process_element(self, value, ctx: ProcessFunction.Context):
         result = {
@@ -64,19 +39,6 @@ class AddTimeProcess(ProcessFunction):
         }
         print(result['update_time'])
         yield result
-
-
-# class AddTimeMapper(MapFunction):
-#     def map(self, value):
-#         return {
-#             'type':value['type'],
-#             'status':value['status'],
-#             'device':value['device'],
-#             'group':value['group'], #人的组
-#             'pod_start_time': datetime.fromtimestamp(value.pod_start_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-#             'mode': json.loads(value['config'])['extra_args']['mode'],  # 4种mode
-#             'duration':json.loads(value['metric'])['bag_duration'],  # 耗时在这
-#         }
 
 
 class MyflatmapFunction(FlatMapFunction):
@@ -217,23 +179,15 @@ class MyflatmapFunction(FlatMapFunction):
                 name=name, period=period, stat_date=stat_date, info=info)
 
 
-class CheckMap(MapFunction):
-    def map(self, value):
-        if value['pod_id'] == 'e251b30c5c8144f6bc2edae38028c371':
-            print(value)
-        return value
-
-
-class Filter(FilterFunction):
-    def filter(self, value):
-        return value.type=='replay' and value['status']=='SUCCESS' and value['output_bag']!='{}' \
-            and 'bag_duration' in json.loads(value['metric'])
-
-
 def analyse(env):
-    stream = env.add_source(read_from_kafka())
+    stream = env.add_source(
+        get_flink_kafka_consumer(
+            schema=TEST_ARS_BAG_SCHEMA,
+            topic=KAFKA_TOPIC_OF_ARS_BAG,
+            group_id='martin_test01',
+            start_date=START_TIME))
 
-    result1=stream.map(CheckMap()).filter(Filter())\
+    result1=stream.filter(Filter())\
         .process(AddTimeProcess())\
         .map(lambda x:
             {
@@ -264,25 +218,6 @@ def analyse(env):
             })\
         .key_by(lambda x:x['label'])\
         .flat_map(MyflatmapFunction(tag='stat_replay_success_bag_duration_group_by_category'))
-
-
-def read_from_kafka():
-    KEYS = [k for k in TEST_ARS_BAG_SCHEMA.keys()]
-    VALUES = [TEST_ARS_BAG_SCHEMA[k] for k in KEYS]
-    deserialization_schema = JsonRowDeserializationSchema.Builder() \
-        .type_info(Types.ROW_NAMED(KEYS, VALUES)) \
-        .build()
-    kafka_consumer = FlinkKafkaConsumer(
-        topics=KAFKA_TOPIC_OF_ARS_BAG,
-        deserialization_schema=deserialization_schema,
-        properties={
-            'bootstrap.servers': KAFKA_SERVERS,
-            'group.id': f'test-{datetime.now()}',
-        })
-    date_object = START_TIME
-    kafka_consumer.set_start_from_timestamp(
-        int(date_object.timestamp()) * 1000)
-    return kafka_consumer
 
 
 if __name__ == "__main__":
