@@ -48,30 +48,30 @@ class AddBagCount(FlatMapFunction):
 class HandleCountFlatMap(FlatMapFunction):
     def __init__(self, tag: str = 'noraml') -> None:
         self.tag = tag
-        self.count_timer = None  # 分钟级:return_dict
-        self.day_count_timer = None,  # day级: return_dict-minutes级时间戳
-        self.day_temp_timer = None,  # day级:占位的1?
+        self.minute_data = None  # 分钟stamp: return_dict
+        self.day_data = None,  # day级: return_dict-minutes级时间戳
+        self.changed_days = None,  # day级:占位的1?
         self.delay_time = 86400
 
     def open(self, context: RuntimeContext) -> None:
         descriptor = MapStateDescriptor(
-            name='count_timer',
+            name='minute_data',
             key_type_info=Types.INT(),
             value_type_info=Types.STRING(),
         )
-        self.count_timer = context.get_map_state(descriptor)
+        self.minute_data = context.get_map_state(descriptor)
         descriptor1 = MapStateDescriptor(
-            name='day_count_timer',
+            name='day_data',
             key_type_info=Types.INT(),
             value_type_info=Types.STRING(),
         )
-        self.day_count_timer = context.get_map_state(descriptor1)
+        self.day_data = context.get_map_state(descriptor1)
         descriptor2 = MapStateDescriptor(
-            name='day_temp_timer_name',
+            name='changed_days_name',
             key_type_info=Types.INT(),
             value_type_info=Types.INT(),
         )
-        self.day_temp_timer = context.get_map_state(descriptor2)
+        self.changed_days = context.get_map_state(descriptor2)
 
     def flat_map(self, value):
         return_dict = {
@@ -83,91 +83,64 @@ class HandleCountFlatMap(FlatMapFunction):
             'minutetime': value['minutetime'],
             'minutetime_int': value['minutetime_int'],
         }
-        count_json = self.count_timer.get(value['minutetime_int'])
-        if self.count_timer.is_empty():
-            max_time_int = 0
-        else:
-            max_time_int = max(list(self.count_timer.keys()))  # 目前为止最大的分钟时间戳
+        count_json = self.minute_data.get(
+            value['minutetime_int'])  # 这个分钟的return_dict累加数据
+        max_minute_int = max(self.minute_data.keys()) if not self.minute_data.is_empty() else 0  # 目前为止最大的分钟时间戳
 
         if count_json is None:  # 首次进入这个60秒窗口
+            if max_minute_int - value['minutetime_int'] > self.delay_time:  # 超过1天前的数据，不应该发生
+                return iter([])
+            self.minute_data.put(value['minutetime_int'],json.dumps(return_dict))
+            if max_minute_int==0:   # kafka来的第一条数据(为什么不update_day_state?)
+                return iter([])
+            if value['minutetime_int'] > max_minute_int and max_minute_int != 0:  # 这是更大的分钟，把前一分钟数据持久化
+                self.record_minute(self.minute_data.get(max_minute_int))
+            else:  # 当前分钟不是最新的分钟，但不超1天前
+                self.update_day_state(value)
 
-            if value['minutetime_int'] > max_time_int and max_time_int != 0:  # 这是更大的分钟
-                self.count_timer.put(value['minutetime_int'],
-                                     json.dumps(return_dict))
-                self.minute_to_day(self.count_timer.get(max_time_int))
-                self.day_temp_timer.clear()
-
-            elif max_time_int == 0:  # 没有旧数据
-                self.count_timer.put(value['minutetime_int'],
-                                     json.dumps(return_dict))
-            elif max_time_int - value[
-                    'minutetime_int'] <= self.delay_time:  # 在以前的时间，且不超1天前
-                self.count_timer.put(value['minutetime_int'],
-                                     json.dumps(return_dict))
-                self.value_to_day(value)
-
-        else:  # 该分钟有过数据了
+        else:  # 该分钟有过数据了，count_json先更新为加上这次数据的这分钟数据
             count_json = json.loads(count_json)
             count_json['count_success'] += value['count_success']
             count_json['count_failure'] += value['count_failure']
 
-            if value['minutetime_int'] == max_time_int:  # 当前分钟时最新的分钟
-                self.count_timer.put(value['minutetime_int'],
+            if value['minutetime_int'] == max_minute_int:  # 当前分钟时最新的分钟
+                self.minute_data.put(value['minutetime_int'],
                                      json.dumps(count_json))
-            elif max_time_int - value[
-                    'minutetime_int'] <= self.delay_time:  # 当前分钟不是最新的分钟，且不超1天前
-                self.count_timer.put(value['minutetime_int'],
+            elif max_minute_int - value[
+                    'minutetime_int'] <= self.delay_time:  # 当前分钟不是最新的分钟，但不超1天前
+                self.minute_data.put(value['minutetime_int'],
                                      json.dumps(count_json))
-                self.value_to_day(value)
-        yield value
+                self.update_day_state(value)
+        return iter([])
 
-    def stat_failure_bag(self, json_str, tag: str):
+    def stat_pod(self, json_str):
         json_mysql = json.loads(json_str)
         stat_date = json_mysql['daytime'] + ' 00:00:00'
-        name = tag.replace('status', 'failure')
         period = 'daily'
         statis_one = StatisticsActions()
-        list_get = list(
-            statis_one.get_statistics(
-                name=name, period=period, stat_date=stat_date))
-        if len(list_get) == 0:
-            info = {}
-            info[json_mysql['label']] = json_mysql['count_failure']
-            statis_one.add_statistics(
-                name=name, period=period, stat_date=stat_date, info=info)
-        else:
-            info = list_get[0].info
-            info[json_mysql['label']] = json_mysql['count_failure']
-            statis_one.update_statistics(
-                name=name, period=period, stat_date=stat_date, info=info)
+        for status in ['success', 'failure']:
+            name = self.tag.replace('status', status)
+            list_get = list(
+                statis_one.get_statistics(
+                    name=name, period=period, stat_date=stat_date))
+            if len(list_get) == 0:
+                info = {}
+                info[json_mysql['label']] = json_mysql[f'count_{status}']
+                statis_one.add_statistics(
+                    name=name, period=period, stat_date=stat_date, info=info)
+            else:
+                info = list_get[0].info
+                info[json_mysql['label']] = json_mysql[f'count_{status}']
+                statis_one.update_statistics(
+                    name=name, period=period, stat_date=stat_date, info=info)
 
-    def stat_success_bag(self, json_str, tag: str):
-        json_mysql = json.loads(json_str)
-        stat_date = json_mysql['daytime'] + ' 00:00:00'
-        name = tag.replace('status', 'success')
-        period = 'daily'
-        statis_one = StatisticsActions()
-        list_get = list(
-            statis_one.get_statistics(
-                name=name, period=period, stat_date=stat_date))
-        if len(list_get) == 0:
-            info = {}
-            info[json_mysql['label']] = json_mysql['count_success']
-            statis_one.add_statistics(
-                name=name, period=period, stat_date=stat_date, info=info)
-        else:
-            info = list_get[0].info
-            info[json_mysql['label']] = json_mysql['count_success']
-            statis_one.update_statistics(
-                name=name, period=period, stat_date=stat_date, info=info)
-
-    def minute_to_day(self, minute_json: str):
+    def record_minute(self, minute_json: str):
         minute_json = json.loads(minute_json)
         daytime_int = minute_json['daytime_int']
-        day_json = self.day_count_timer.get(daytime_int)
-        self.day_temp_timer.put(daytime_int, 1)
-        if day_json == None:
-            self.day_count_timer.put(
+        day_json = self.day_data.get(daytime_int)  # 旧的天级数据
+        self.changed_days.put(daytime_int, 1)  # 表示哪些天的数据发生更改了
+        if day_json == None:  # 第一次进入这个天级数据
+            self.day_data.put(
                 daytime_int,
                 json.dumps({
                     'daytime_int': daytime_int,
@@ -180,22 +153,17 @@ class HandleCountFlatMap(FlatMapFunction):
             day_json = json.loads(day_json)
             day_json['count_success'] += minute_json['count_success']
             day_json['count_failure'] += minute_json['count_failure']
-            self.day_count_timer.put(daytime_int, json.dumps(day_json))
-        for daytime_int_one in self.day_temp_timer.keys():
+            self.day_data.put(daytime_int, json.dumps(day_json))
+        for daytime_int_one in self.changed_days.keys():
+            self.stat_pod(json_str=self.day_data.get(daytime_int_one))
+        self.changed_days.clear()
 
-            self.stat_success_bag(
-                json_str=self.day_count_timer.get(daytime_int_one),
-                tag=self.tag)
-            self.stat_failure_bag(
-                json_str=self.day_count_timer.get(daytime_int_one),
-                tag=self.tag)
-
-    def value_to_day(self, value: dict):
+    def update_day_state(self, value: dict):
         daytime_int = value['daytime_int']
-        day_json = self.day_count_timer.get(daytime_int)
-        self.day_temp_timer.put(daytime_int, 1)
-        if day_json == None:
-            self.day_count_timer.put(
+        day_json = self.day_data.get(daytime_int)
+        self.changed_days.put(daytime_int, 1)  # 表示哪些天的数据发生更改了
+        if day_json == None:  # 那天还没数据
+            self.day_data.put(
                 daytime_int,
                 json.dumps({
                     'daytime_int': daytime_int,
@@ -204,11 +172,11 @@ class HandleCountFlatMap(FlatMapFunction):
                     'count_success': value['count_success'],
                     'count_failure': value['count_failure'],
                 }))
-        else:
+        else:  # 那天有数据，更新这个天级数据day_data
             day_json = json.loads(day_json)
             day_json['count_success'] += value['count_success']
             day_json['count_failure'] += value['count_failure']
-            self.day_count_timer.put(daytime_int, json.dumps(day_json))
+            self.day_data.put(daytime_int, json.dumps(day_json))
 
 
 def analyse(env: StreamExecutionEnvironment):
@@ -248,6 +216,7 @@ def analyse(env: StreamExecutionEnvironment):
                        })\
         .key_by(lambda x: x['label'])\
        .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_category'))
+       
     stat_replay_status_bag_group_by_mode=stream.filter(lambda x:x.workflow_type=='replay').flat_map(AddBagCount())\
         .filter(lambda x:'extra_args' in json.loads(x['value']['workflow_input'])
                           and 'mode' in json.loads(x['value']['workflow_input'])['extra_args'])\
@@ -264,6 +233,7 @@ def analyse(env: StreamExecutionEnvironment):
                        })\
         .key_by(lambda x: x['label'])\
         .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_mode'))
+        
     stat_status_bag_group_by_type=stream.flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
                        'value':x['value'],
