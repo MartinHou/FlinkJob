@@ -4,23 +4,21 @@ from typing import Iterable
 from datetime import datetime
 import json
 from pyflink.common import (
-    Types,
-)
+    Types, )
 from pyflink.datastream import (
-    StreamExecutionEnvironment, 
+    StreamExecutionEnvironment,
     FlatMapFunction,
     RuntimeContext,
     FilterFunction,
 )
 from kafka import KafkaProducer
 from pyflink.common.watermark_strategy import TimestampAssigner
-from pyflink.datastream.connectors.kafka import  FlinkKafkaConsumer
-from pyflink.datastream.formats.json import  JsonRowDeserializationSchema
-from pyflink.datastream.state import MapStateDescriptor,ValueStateDescriptor
+from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
+from pyflink.datastream.formats.json import JsonRowDeserializationSchema
+from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor
 from common.settings import *
 
 logger = logging.getLogger(__name__)
-
 
 TEST_ARS_BAG_SCHEMA = {
     'result_id': Types.STRING(),
@@ -50,24 +48,28 @@ TEST_ARS_BAG_SCHEMA = {
     'backtrace': Types.STRING(),
     'final_attempt': Types.BOOLEAN(),
     'config': Types.STRING(),
-    }
+}
 
 
 class Flatten(FlatMapFunction):
     def flat_map(self, value):
-        producer = KafkaProducer(
-        bootstrap_servers=KAFKA_SERVERS)
+        producer = KafkaProducer(bootstrap_servers=KAFKA_SERVERS)
         # print(value.type,value.status,value.backtrace,value.error_type)
-        producer.send(KAFKA_TOPIC_OF_ARS_BAG_CRASH, value=json.dumps(named_tuple_to_dict(value)).encode('utf-8'))
+        producer.send(
+            KAFKA_TOPIC_OF_ARS_BAG_CRASH,
+            value=json.dumps(named_tuple_to_dict(value)).encode('utf-8'))
         yield value
+
+
 def named_tuple_to_dict(nt):
     return {field: getattr(nt, field) for field in nt._fields}
+
 
 class Filter(FilterFunction):
     def filter(self, value):
         # print(value.type,value.status,value.coredump)
         # if value.type=='replay'and value.status=='FAILURE' and value.coredump is not None:
-        if value.type=='replay'and value.status=='FAILURE' and value.backtrace is not None:
+        if value.type == 'replay' and value.status == 'FAILURE' and value.backtrace is not None:
             return True
         else:
             return False
@@ -84,15 +86,13 @@ def read_from_kafka():
         topics=KAFKA_TOPIC_OF_ARS_BAG,
         deserialization_schema=deserialization_schema,
         properties={
-            'bootstrap.servers':KAFKA_SERVERS
-            ,
-            'group.id':KAFKA_CONSUMUER_GOURP_ID,
+            'bootstrap.servers': KAFKA_SERVERS,
+            'group.id': KAFKA_CONSUMUER_GOURP_ID,
         })
     # date_string = "2023-08-14 20:00:00"
     # date_object = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
     date_object = START_TIME
-    date_int= int(int(
-            time.mktime((date_object).timetuple()))*1000)
+    date_int = int(int(time.mktime((date_object).timetuple())) * 1000)
     # 也可以使用set_start_from_timestamp
     kafka_consumer.set_start_from_timestamp(date_int)
 
@@ -102,13 +102,12 @@ def read_from_kafka():
 def analyse(env: StreamExecutionEnvironment):
 
     stream = env.add_source(read_from_kafka())
-    result=stream.filter(Filter()).flat_map(Flatten())
+    result = stream.filter(Filter()).flat_map(Flatten())
+
 
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars(
-         "file://"+FLINK_SQL_CONNECTOR_KAFKA_LOC
-    )
+    env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
     env.execute()

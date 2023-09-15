@@ -1,9 +1,9 @@
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, String, BigInteger, DateTime, JSON,Integer,FLOAT
+from sqlalchemy import create_engine, Column, String, BigInteger, DateTime, JSON, Integer, FLOAT
 from sqlalchemy.ext.declarative import declarative_base
 MYSQL_USER = 'ars_dev'
 MYSQL_PASSWORD = '01234567'
-MYSQL_HOST = '10.10.2.244'
+MYSQL_HOST = '10.8.117.133'
 MYSQL_DATABASE = 'ars_local'
 Base = declarative_base()
 
@@ -16,24 +16,26 @@ class Statistics(Base):
     period = Column(String(128), nullable=False)
     stat_date = Column(DateTime, nullable=False)
     info = Column(JSON, nullable=False)
-class Workflow(Base):
-    __tablename__='workflow'
-    workflow_id=Column(String(32),primary_key=True)
-    workflow_type=Column(String(64),nullable=False)
-    workflow_name=Column(String(128),nullable=False)
-    category = Column(String(64),nullable=False)
-    device = Column(String(128),nullable=False)
-    device_num = Column(Integer,nullable=False)
 
-    user = Column(String(64),nullable=False)
-    data_source = Column(String(128),nullable=False)
-    upload_ttl = Column(FLOAT,nullable=False)
-    bag_nums = Column(FLOAT,nullable=False)
+
+class Workflow(Base):
+    __tablename__ = 'workflow'
+    workflow_id = Column(String(32), primary_key=True)
+    workflow_type = Column(String(64), nullable=False)
+    workflow_name = Column(String(128), nullable=False)
+    category = Column(String(64), nullable=False)
+    device = Column(String(128), nullable=False)
+    device_num = Column(Integer, nullable=False)
+
+    user = Column(String(64), nullable=False)
+    data_source = Column(String(128), nullable=False)
+    upload_ttl = Column(FLOAT, nullable=False)
+    bag_nums = Column(FLOAT, nullable=False)
     workflow_input = Column(JSON, nullable=False)
-    workflow_output =Column(JSON, nullable=False)
+    workflow_output = Column(JSON, nullable=False)
     log = Column(JSON, nullable=False)
-    workflow_status = Column(String(32),nullable=True)
-    priority =Column(Integer,nullable=False)
+    workflow_status = Column(String(32), nullable=True)
+    priority = Column(Integer, nullable=False)
     tag = Column(JSON, nullable=False)
     hook = Column(JSON, nullable=False)
     create_time = Column(DateTime, nullable=False)
@@ -49,8 +51,12 @@ class Workflow(Base):
 
 
 # 创建数据库引擎
-engine = create_engine('mysql+pymysql://' + MYSQL_USER + ':' + MYSQL_PASSWORD +
-                       '@' + MYSQL_HOST + ':3306/' + MYSQL_DATABASE,pool_size=100, max_overflow=200,pool_recycle=3600)
+engine = create_engine(
+    'mysql+pymysql://' + MYSQL_USER + ':' + MYSQL_PASSWORD + '@' + MYSQL_HOST +
+    ':3306/' + MYSQL_DATABASE,
+    pool_size=100,
+    max_overflow=200,
+    pool_recycle=3600)
 
 # 创建会话工厂
 Session = sessionmaker(bind=engine)
@@ -74,17 +80,13 @@ class StatisticsActions:
         # 关闭会话
         session.close()
 
-    def update_statistics(self,
-                          name,
-                          period,
-                          stat_date,
-                          info):
+    def update_statistics(self, name, period, stat_date, info):
         # 创建会话
         session = Session()
 
         # 找到要更新的统计记录
         statistics = session.query(Statistics).filter_by(
-            name=name,period=period,stat_date=stat_date).first()
+            name=name, period=period, stat_date=stat_date).first()
 
         # 更新统计记录信息
         if info:
@@ -126,6 +128,12 @@ class StatisticsActions:
 
         # 返回统计记录
         return statistics
+
+
 if __name__ == "__main__":
-    stati= StatisticsActions()
-    stati.add_statistics(name='stat_failure_pod_group_by_type',period='daily',stat_date='2023-07-03 00:00:00',info={})
+    stati = StatisticsActions()
+    stati.add_statistics(
+        name='stat_failure_pod_group_by_type',
+        period='daily',
+        stat_date='2023-07-03 00:00:00',
+        info={})

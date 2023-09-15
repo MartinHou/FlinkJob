@@ -2,8 +2,8 @@ import logging
 import datetime
 
 from pyflink.datastream import (
-    StreamExecutionEnvironment, 
-    FlatMapFunction, 
+    StreamExecutionEnvironment,
+    FlatMapFunction,
     RuntimeContext,
 )
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
@@ -14,7 +14,6 @@ from pyflink.datastream.state import MapStateDescriptor
 import requests
 
 logger = logging.getLogger(__name__)
-
 
 NODE_MONITOR_MSG_SCHEMA = {
     "cluster_name": Types.STRING(),
@@ -38,17 +37,18 @@ class NodeMonitor(FlatMapFunction):
         self.mq_message_type = "ARSNodeMonitor"
         self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
         self.warning_assignees = ["ou_0c135f719351847da272c21880f9b96f"]
-        self.warning_assignees_str = " ".join([self.assign_someone(user) for user in self.warning_assignees])
-    
+        self.warning_assignees_str = " ".join(
+            [self.assign_someone(user) for user in self.warning_assignees])
+
     def open(self, context: RuntimeContext) -> None:
         # fault_time is a map state, key is fault type, value is timestamp
         descriptor = MapStateDescriptor(
-            name=self.fault_timer_descriptor_name, 
-            key_type_info=Types.STRING(), 
+            name=self.fault_timer_descriptor_name,
+            key_type_info=Types.STRING(),
             value_type_info=Types.DOUBLE(),
         )
         self.fault_timer = context.get_map_state(descriptor)
-        
+
     def flat_map(self, value):
         try:
             if value.msg_level == "fault":
@@ -95,8 +95,8 @@ class NodeMonitor(FlatMapFunction):
             else:
                 logger.error('Unknown msg_level: %s', value.msg_level)
         except Exception as e:
-            logger.error('Error: %s', str(e)) 
-            
+            logger.error('Error: %s', str(e))
+
         yield value
 
     def assign_someone(self, user: str) -> str:
@@ -106,7 +106,8 @@ class NodeMonitor(FlatMapFunction):
 def monitor_node(env: StreamExecutionEnvironment):
     KEYS = [k for k in NODE_MONITOR_MSG_SCHEMA]
     VALUES = [NODE_MONITOR_MSG_SCHEMA[k] for k in NODE_MONITOR_MSG_SCHEMA]
-    schema = JsonRowDeserializationSchema.builder().type_info(Types.ROW_NAMED(KEYS, VALUES)).build()
+    schema = JsonRowDeserializationSchema.builder().type_info(
+        Types.ROW_NAMED(KEYS, VALUES)).build()
     kafka_consumer = FlinkKafkaConsumer(
         topics=[KAFKA_TOPIC_OF_NODE_MONITOR],
         deserialization_schema=schema,
@@ -125,9 +126,10 @@ def monitor_node(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars("file:///home2/hanwen.qiu/dev/ars/flink-jobs/flink-sql-connector-kafka-1.15.4.jar")
+    env.add_jars(
+        "file:///home2/hanwen.qiu/dev/ars/flink-jobs/flink-sql-connector-kafka-1.15.4.jar"
+    )
 
     monitor_node(env)
-    
+
     env.execute()
-    
