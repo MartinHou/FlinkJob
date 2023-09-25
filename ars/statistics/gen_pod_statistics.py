@@ -17,7 +17,6 @@ from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 
 logger = logging.getLogger(__name__)
 
-
 class AddPodCount(MapFunction):
     def map(self, value):
         return {
@@ -37,7 +36,7 @@ class AddBagCount(FlatMapFunction):
                     count_success += 1
                 else:
                     count_failure += 1
-            print(value['update_time'])
+            print('gen_pod_stat',value['update_time'])
             yield {
                 'count_failure': count_failure,
                 'count_success': count_success,

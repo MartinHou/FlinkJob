@@ -48,7 +48,7 @@ class MyflatmapFunction(FlatMapFunction):
         self.changed_days = context.get_map_state(descriptor2)
 
     def flat_map(self, value):
-        print(value['time'])
+        print('gen_consuming',value['time'])
         count_json = self.minute_data.get(value['minutetime_int'])
         result = self.value_to_consuming(value, count_json, 'minute')
         max_minute_int = max(self.minute_data.keys(

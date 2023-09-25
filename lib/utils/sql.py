@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 MYSQL_USER = 'ars_dev'
 MYSQL_PASSWORD = '01234567'
-MYSQL_HOST = '10.8.117.133'
+MYSQL_HOST = '10.8.106.103'
 MYSQL_DATABASE = 'ars_local'
 Base = declarative_base()
 

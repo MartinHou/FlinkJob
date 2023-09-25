@@ -38,7 +38,7 @@ class AddTimeProcess(ProcessFunction):
                 datetime.fromtimestamp(ctx.timestamp() / 1000),
                 "%Y-%m-%d %H:%M:%S"),  # 访问消息的时间戳并将其转化为 datetime 对象
         }
-        print(result['update_time'])
+        print('gen_bag_stat',result['update_time'])
         yield result
 
 
