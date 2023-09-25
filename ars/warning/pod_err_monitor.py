@@ -36,6 +36,8 @@ class PodErrMonitor(ProcessWindowFunction):
         self.window_size = window_size
         self.window_slide = window_slide
         self.last_warn_timestamp = None  # in seconds
+        self.retried_pods = None     # avoid duplicate retry
+        
         self.warning_api = ARS_HOST + "/api/v1/notification/warn/"
         self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
         self.warning_assignees = ["ou_0c135f719351847da272c21880f9b96f"]
@@ -49,34 +51,42 @@ class PodErrMonitor(ProcessWindowFunction):
             "last_warn_timestamp", Types.INT())
         self.last_warn_timestamp = runtime_context.get_state(
             self.last_warn_timestamp_descriptor)
+        self.retried_pods_descriptor = MapStateDescriptor(
+            "retried_pods", Types.STRING(), Types.BOOLEAN())
+        self.retried_pods = runtime_context.get_map_state(
+            self.retried_pods_descriptor)
 
     def process(self, key, context, elements):
         if len(elements) < 5:
             yield 'normal: ' + str(len(elements))
         else:
             cluster_name, node_name = key.split('__')
-            workflows = [
-                self.parse_pod_name(ele['pod_name']) for ele in elements
-            ]
+            workflows = []
+            for ele in elements:
+                pod_name = self.parse_pod_name(ele['pod_name'])
+                if not self.retried_pods.contains(pod_name):
+                    workflows.append(pod_name)
+                    self.retried_pods.put(pod_name,True)
             # TODO: cordon
-
-            # try:
-            #     http_request(
-            #         method='PUT',
-            #         url=ARS_HOST + '/api/v1/driver/workflow/retry',
-            #         data={'workflow_ids': workflows},
-            #         headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
-            # except Exception as e:
-            #     print(f"error: {e}")
+            # if workflows:
+            #     try:
+            #         http_request(
+            #             method='PUT',
+            #             url=ARS_HOST + '/api/v1/driver/workflow/retry',
+            #             data={'workflow_ids': workflows},
+            #             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+            #     except Exception as e:
+            #         print(f"error: {e}")
             if self.last_warn_timestamp.value() is not None \
                     and datetime.now() - datetime.fromtimestamp(self.last_warn_timestamp.value()) <= timedelta(minutes=5):
                 yield 'coolling, last: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S')
-            elif len(elements) >= 5:
+            else:
                 print(
                     f"shoot warning: {len(elements)},{node_name},{cluster_name}"
                 )
+                self.retried_pods.clear()
                 # http_request(method='POST', url=ARS_HOST+'/api/v1/notification/warn/',data={
                 #     "user_id": self.warning_chat_group,
                 #     "info": f"FAULT! GPU error on machine {node_name}" + \
