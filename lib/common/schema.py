@@ -54,3 +54,10 @@ TEST_ARS_BAG_SCHEMA = {
     'final_attempt': Types.BOOLEAN(),
     'config': Types.STRING(),
 }
+
+POD_ERR_SCHEMA = {
+    "cluster_name": Types.STRING(),
+    "node_name": Types.STRING(),
+    "pod_name": Types.STRING(),
+    "happened_at": Types.DOUBLE(),
+}

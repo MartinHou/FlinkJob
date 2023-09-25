@@ -4,7 +4,7 @@ from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from lib.common.settings import KAFKA_SERVERS
 
 
-def get_flink_kafka_consumer(schema, topic, group_id, start_date):
+def get_flink_kafka_consumer(schema, topic, group_id, start_date=None):
     KEYS = [k for k in schema.keys()]
     VALUES = [schema[k] for k in KEYS]
     deserialization_schema = JsonRowDeserializationSchema.Builder() \
@@ -17,7 +17,8 @@ def get_flink_kafka_consumer(schema, topic, group_id, start_date):
             'bootstrap.servers': KAFKA_SERVERS,
             'group.id': group_id,
         })
-    date_object = start_date
-    kafka_consumer.set_start_from_timestamp(
-        int(date_object.timestamp()) * 1000)
+    if start_date:
+        date_object = start_date
+        kafka_consumer.set_start_from_timestamp(
+            int(date_object.timestamp()) * 1000)
     return kafka_consumer

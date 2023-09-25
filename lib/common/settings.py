@@ -19,3 +19,7 @@ KAFKA_TOPIC_OF_ARS_WORKFLOW = 'ars_prod_pod_result'
 KAFKA_TOPIC_OF_ARS_BAG = 'ars_prod_bag_result'
 KAFKA_TOPIC_OF_ARS_BAG_CRASH = 'ars_prod_bag_crash_result'
 KAFKA_CONSUMUER_GOURP_ID = "flink_get_crash"
+
+ARS_HOST = 'https://ars.momenta.works'
+# ARS_HOST = 'http://localhost:9000'
+ARS_API_ROOT_TOKEN = '8e4c872d-b688-4900-83b1-b28a8efd4001'
