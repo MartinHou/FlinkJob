@@ -29,14 +29,22 @@ class AddPodCount(MapFunction):
 class AddBagCount(FlatMapFunction):
     def flat_map(self, value):
         workflow_output = json.loads(value.workflow_output)
+        workflow_status = value.workflow_status
         count_success, count_failure = 0, 0
-        if 'bag_replayed_list' in workflow_output:
+        print('gen_pod_stat',value['update_time'])
+        if workflow_status=='FAILURE':
+            count_failure+=value.bag_nums
+            yield {
+                'count_failure': count_failure,
+                'count_success': count_success,
+                'value': value
+            }
+        elif workflow_status=='SUCCESS' and 'bag_replayed_list' in workflow_output:
             for one in workflow_output['bag_replayed_list']:
                 if one:
                     count_success += 1
                 else:
                     count_failure += 1
-            print('gen_pod_stat',value['update_time'])
             yield {
                 'count_failure': count_failure,
                 'count_success': count_success,
@@ -216,7 +224,7 @@ def analyse(env: StreamExecutionEnvironment):
         .key_by(lambda x: x['label'])\
         .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_mode'))
 
-    stat_status_bag_group_by_type=stream.flat_map(AddBagCount())\
+    stat_status_bag_group_by_type=stream.filter(lambda x:x.workflow_type!='probe_detect').flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
                        'value':x['value'],
                        'count_success':x['count_success'],

@@ -1,4 +1,4 @@
-from common.settings import *
+from lib.common.settings import *
 import os
 
 
