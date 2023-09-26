@@ -16,14 +16,14 @@ for i in range(5):
     producer.send(topic='martin_test',value={
         "cluster_name": "DDInfra",
         "node_name": "node1",
-        "pod_name": f"3090-1-ars-002bacb68af748048e2b001e41836a8e-replay-bag-smgfqa{i}",
+        "pod_name": f"3090-1-ars-002bacb68af748048e2b001e41836a8a-replay-bag-smgfqa{i}",
         "happened_at": datetime.now().timestamp(),
     })
 for i in range(3):
     producer.send(topic='martin_test',value={
         "cluster_name": "DDInfra",
         "node_name": "node2",
-        "pod_name": f"2080-1-ars-002bacb68af748048e2b001e41836a8e-replay-bag-smgfqa{i}",
+        "pod_name": f"2080-1-ars-002bacb68af748048e2b001e41836a8b-replay-bag-smgfqa{i}",
         "happened_at": datetime.now().timestamp(),
     })
 

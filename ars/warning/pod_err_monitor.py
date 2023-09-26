@@ -24,11 +24,9 @@ from lib.common.schema import POD_ERR_SCHEMA
 import requests
 from lib.utils.utils import http_request
 
-# WINDOW_SIZE = Time.minutes(5)
-# WINDOW_SLIDE = Time.seconds(10)
+WINDOW_SIZE = Time.minutes(5)
+WINDOW_SLIDE = Time.seconds(10)
 
-WINDOW_SIZE = Time.seconds(30)
-WINDOW_SLIDE = Time.seconds(3)
 
 
 class PodErrMonitor(ProcessWindowFunction):
@@ -68,12 +66,14 @@ class PodErrMonitor(ProcessWindowFunction):
                     workflows.append(pod_name)
                     self.retried_pods.put(pod_name,True)
             # TODO: cordon
-            # if workflows:
+            print(f'cordon: {node_name}')
+            if workflows:
+                print(f'提升优先级到3: {workflows}')
             #     try:
             #         http_request(
             #             method='PUT',
-            #             url=ARS_HOST + '/api/v1/driver/workflow/retry',
-            #             data={'workflow_ids': workflows},
+            #             url=ARS_HOST + '/api/v1/driver/workflow/improve_priority/3',
+            #             data={'workflow_id__in': workflows},
             #             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
             #     except Exception as e:
             #         print(f"error: {e}")
@@ -83,10 +83,10 @@ class PodErrMonitor(ProcessWindowFunction):
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S')
             else:
-                print(
-                    f"shoot warning: {len(elements)},{node_name},{cluster_name}"
-                )
-                self.retried_pods.clear()
+                print(f"通知: {node_name},{cluster_name}在{datetime.fromtimestamp(elements[0].happened_at)}")
+                if self.last_warn_timestamp.value() is not None:
+                    self.retried_pods.clear()
+                
                 # http_request(method='POST', url=ARS_HOST+'/api/v1/notification/warn/',data={
                 #     "user_id": self.warning_chat_group,
                 #     "info": f"FAULT! GPU error on machine {node_name}" + \
@@ -119,7 +119,7 @@ def monitor(env: StreamExecutionEnvironment):
     ds.key_by(lambda x: f"{x['cluster_name']}__{x['node_name']}") \
         .window(SlidingProcessingTimeWindows.of(WINDOW_SIZE,WINDOW_SLIDE))\
         .process(PodErrMonitor(WINDOW_SIZE,WINDOW_SLIDE))\
-        .print()
+        # .print()
 
 
 if __name__ == "__main__":
