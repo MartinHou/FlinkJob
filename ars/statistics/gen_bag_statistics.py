@@ -38,7 +38,7 @@ class AddTimeProcess(ProcessFunction):
                 datetime.fromtimestamp(ctx.timestamp() / 1000),
                 "%Y-%m-%d %H:%M:%S"),  # 访问消息的时间戳并将其转化为 datetime 对象
         }
-        print('gen_bag_stat',result['update_time'])
+        print('gen_bag_stat', result['update_time'])
         yield result
 
 
@@ -82,7 +82,7 @@ class HandleDurationFlatMap(FlatMapFunction):
         count_json = self.minute_data.get(value['minutetime_int'])
         max_minute_int = max(self.minute_data.keys(
         )) if not self.minute_data.is_empty() else 0  # 目前为止最大的分钟时间戳
-        
+
         if max_minute_int - value[
                 'minutetime_int'] > self.delay_time:  # 过期数据，丢弃
             return iter([])
@@ -126,7 +126,7 @@ class HandleDurationFlatMap(FlatMapFunction):
             info[json_mysql['label']] = json_mysql['duration']
             statis_one.update_statistics(
                 name=name, period=period, stat_date=stat_date, info=info)
-            
+
     def record_minute(self, minute_json: str):
         minute_json = json.loads(minute_json)
         self.update_day_state(minute_json)
@@ -151,8 +151,6 @@ class HandleDurationFlatMap(FlatMapFunction):
             day_json = json.loads(day_json)
             day_json['duration'] += new_dict['duration']
             self.day_data.put(daytime_int, json.dumps(day_json))
-
-    
 
 
 def analyse(env):

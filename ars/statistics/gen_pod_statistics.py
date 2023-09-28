@@ -17,6 +17,7 @@ from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 
 logger = logging.getLogger(__name__)
 
+
 class AddPodCount(MapFunction):
     def map(self, value):
         return {
@@ -31,15 +32,15 @@ class AddBagCount(FlatMapFunction):
         workflow_output = json.loads(value.workflow_output)
         workflow_status = value.workflow_status
         count_success, count_failure = 0, 0
-        print('gen_pod_stat',value['update_time'])
-        if workflow_status=='FAILURE':
-            count_failure+=value.bag_nums
+        print('gen_pod_stat', value['update_time'])
+        if workflow_status == 'FAILURE':
+            count_failure += value.bag_nums
             yield {
                 'count_failure': count_failure,
                 'count_success': count_success,
                 'value': value
             }
-        elif workflow_status=='SUCCESS' and 'bag_replayed_list' in workflow_output:
+        elif workflow_status == 'SUCCESS' and 'bag_replayed_list' in workflow_output:
             for one in workflow_output['bag_replayed_list']:
                 if one:
                     count_success += 1

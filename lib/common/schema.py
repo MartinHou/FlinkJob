@@ -56,8 +56,8 @@ TEST_ARS_BAG_SCHEMA = {
 }
 
 POD_ERR_SCHEMA = {
-    "cluster_name": Types.STRING(),
     "node_name": Types.STRING(),
-    "pod_name": Types.STRING(),
-    "happened_at": Types.DOUBLE(),
+    "job_status": Types.STRING(),
+    "job_name": Types.STRING(),
+    "timestamp": Types.STRING(),
 }

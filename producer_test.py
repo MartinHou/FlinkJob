@@ -1,7 +1,7 @@
 from kafka import KafkaProducer
 import json
 from datetime import datetime
-from lib.common.schema import POD_ERR_SCHEMA
+from lib.common.settings import KAFKA_TOPIC_OF_JOB_MONITOR
 
 # 初始化Kafka Producer
 producer = KafkaProducer(
@@ -12,20 +12,12 @@ producer = KafkaProducer(
         )
 
 # 发送一些数据
-for i in range(5):
-    producer.send(topic='martin_test',value={
-        "cluster_name": "DDInfra",
-        "node_name": "node1",
-        "pod_name": f"3090-1-ars-002bacb68af748048e2b001e41836a8a-replay-bag-smgfqa{i}",
-        "happened_at": datetime.now().timestamp(),
-    })
-for i in range(3):
-    producer.send(topic='martin_test',value={
-        "cluster_name": "DDInfra",
-        "node_name": "node2",
-        "pod_name": f"2080-1-ars-002bacb68af748048e2b001e41836a8b-replay-bag-smgfqa{i}",
-        "happened_at": datetime.now().timestamp(),
-    })
+producer.send(topic=KAFKA_TOPIC_OF_JOB_MONITOR,value={
+    "node_name": '10.9.1.26',
+    "job_status": 'failed',
+    "job_name": '3090-1-ars-ef199570b574453b82558f452b81136f-replay-bag-test',
+    "timestamp": 1000*datetime.now().timestamp()
+})
 
 # 确保所有的消息都被发送出去
 producer.flush()

@@ -48,26 +48,27 @@ class MyflatmapFunction(FlatMapFunction):
         self.changed_days = context.get_map_state(descriptor2)
 
     def flat_map(self, value):
-        print('gen_consuming',value['time'])
+        print('gen_consuming', value['time'])
         count_json = self.minute_data.get(value['minutetime_int'])
         result = self.value_to_consuming(value, count_json, 'minute')
-        max_minute_int = max(self.minute_data.keys(
-        )) if not self.minute_data.is_empty() else 0
-        
-        if max_minute_int - value['minutetime_int'] > self.delay_time:  # 过期数据，丢弃
+        max_minute_int = max(
+            self.minute_data.keys()) if not self.minute_data.is_empty() else 0
+
+        if max_minute_int - value[
+                'minutetime_int'] > self.delay_time:  # 过期数据，丢弃
             return iter([])
 
-        self.minute_data.put(value['minutetime_int'],
-                                json.dumps(result))
+        self.minute_data.put(value['minutetime_int'], json.dumps(result))
         if count_json is None:
             if max_minute_int == 0:  # kafka来的第一条数据
                 return iter([])
-            if value['minutetime_int'] > max_minute_int and max_minute_int != 0:  # 这是更大的分钟，把前一分钟数据持久化
+            if value[
+                    'minutetime_int'] > max_minute_int and max_minute_int != 0:  # 这是更大的分钟，把前一分钟数据持久化
                 self.record_minute(self.minute_data.get(max_minute_int))
             else:  # 不是最新的分钟
                 self.update_day_state(value)
 
-        elif value['minutetime_int'] != max_minute_int: # 该分钟有过数据了
+        elif value['minutetime_int'] != max_minute_int:  # 该分钟有过数据了
             self.update_day_state(value)
         return iter([])
 
@@ -192,8 +193,7 @@ class MyflatmapFunction(FlatMapFunction):
         for daytime_int_one in self.changed_days.keys():
 
             self.stat_replay_time_consuming_group_by_category(
-                json_str=self.day_data.get(daytime_int_one),
-                tag=self.tag)
+                json_str=self.day_data.get(daytime_int_one), tag=self.tag)
 
     def update_day_state(self, value: dict):
         daytime_int = value['daytime_int']
