@@ -225,7 +225,7 @@ def analyse(env: StreamExecutionEnvironment):
             'category':x.category,
             'bags_profile_summary':json.loads(x.metric)['bags_profile_summary']
             }).key_by(lambda x:x['device']+x['category'])\
-                .flat_map(MyflatmapFunction(tag='stat_replay_time_consuming_group_by_category'))
+                .flat_map(MyflatmapFunction(tag='REALTIME_stat_replay_time_consuming_group_by_category'))
 
 
 if __name__ == "__main__":

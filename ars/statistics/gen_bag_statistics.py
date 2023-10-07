@@ -175,7 +175,7 @@ def analyse(env):
                 'minutetime':timestr_to_minutestr(x['update_time']),
             })\
         .key_by(lambda x:x['label'])\
-        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_mode'))
+        .flat_map(HandleDurationFlatMap(tag='REALTIME_stat_replay_success_bag_duration_group_by_mode'))
 
     stat_replay_success_bag_duration_group_by_category=stream.filter(Filter())\
         .process(AddTimeProcess())\
@@ -191,7 +191,7 @@ def analyse(env):
                 'minutetime':timestr_to_minutestr(x['update_time']),
             })\
         .key_by(lambda x:x['label'])\
-        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_category'))
+        .flat_map(HandleDurationFlatMap(tag='REALTIME_stat_replay_success_bag_duration_group_by_category'))
 
 
 if __name__ == "__main__":

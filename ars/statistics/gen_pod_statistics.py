@@ -191,7 +191,7 @@ def analyse(env: StreamExecutionEnvironment):
         'minutetime_int':timestr_to_minute_int(x['value']['update_time']),
         'minutetime':timestr_to_minutestr(x['value']['update_time']),
     }).key_by(lambda x: x['label'])\
-    .flat_map(HandleCountFlatMap(tag='stat_status_pod_group_by_type'))
+    .flat_map(HandleCountFlatMap(tag='REALTIME_stat_status_pod_group_by_type'))
 
     stat_replay_status_bag_group_by_category=stream.filter(lambda x:x.workflow_type=='replay').flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
@@ -206,7 +206,7 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
         .key_by(lambda x: x['label'])\
-       .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_category'))
+       .flat_map(HandleCountFlatMap(tag='REALTIME_stat_replay_status_bag_group_by_category'))
 
     stat_replay_status_bag_group_by_mode=stream.filter(lambda x:x.workflow_type=='replay').flat_map(AddBagCount())\
         .filter(lambda x:'extra_args' in json.loads(x['value']['workflow_input'])
@@ -223,7 +223,7 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
         .key_by(lambda x: x['label'])\
-        .flat_map(HandleCountFlatMap(tag='stat_replay_status_bag_group_by_mode'))
+        .flat_map(HandleCountFlatMap(tag='REALTIME_stat_replay_status_bag_group_by_mode'))
 
     stat_status_bag_group_by_type=stream.filter(lambda x:x.workflow_type!='probe_detect').flat_map(AddBagCount())\
         .map(lambda x:{'count_failure':x['count_failure'],
@@ -237,7 +237,7 @@ def analyse(env: StreamExecutionEnvironment):
                        'minutetime_int':timestr_to_minute_int(x['value']['update_time']),
                        'minutetime':timestr_to_minutestr(x['value']['update_time']),
                        })\
-        .key_by(lambda x: x['label']).flat_map(HandleCountFlatMap(tag='stat_status_bag_group_by_type'))
+        .key_by(lambda x: x['label']).flat_map(HandleCountFlatMap(tag='REALTIME_stat_status_bag_group_by_type'))
 
 
 if __name__ == "__main__":
