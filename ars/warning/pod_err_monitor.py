@@ -41,7 +41,7 @@ class PodErrMonitor(ProcessWindowFunction):
 
         self.warning_api = ARS_HOST + "/api/v1/notification/warn/"
         self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
-        self.warning_assignees = ["ou_0c135f719351847da272c21880f9b96f"]
+        self.warning_assignees = ["ou_0c135f719351847da272c21880f9b96f","ou_cb867b8fedad86c53850ad776877aba7"]
         self.warning_assignees_str = " ".join(
             [self.assign_someone(user) for user in self.warning_assignees])
         self.mq_message_source = "ars_pod_err_monitor"
@@ -84,12 +84,13 @@ class PodErrMonitor(ProcessWindowFunction):
                 try:
                     response = http_request(
                         method='PATCH',
-                        url=GRM_HOST+'/api/v1/cluster/node',
+                        url=GRM_HOST + '/api/v1/cluster/node',
                         data=body,
-                        headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN}
-                    )
+                        headers={
+                            'Authorization': 'Token ' + ARS_API_ROOT_TOKEN
+                        })
                     if response.status_code == 200:
-                        self.cordoned_nodes.put(node_name,True)
+                        self.cordoned_nodes.put(node_name, True)
                 except Exception as e:
                     print(f'error: {e}')
 
