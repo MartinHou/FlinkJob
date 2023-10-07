@@ -1,11 +1,12 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, String, BigInteger, DateTime, JSON, Integer, FLOAT
 from sqlalchemy.ext.declarative import declarative_base
+from lib.common.settings import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER
 
-MYSQL_USER = 'ars_dev'
-MYSQL_PASSWORD = '01234567'
-MYSQL_HOST = '10.8.106.103'
-MYSQL_DATABASE = 'ars_local'
+# MYSQL_USER = 'ars_dev'
+# MYSQL_PASSWORD = '01234567'
+# MYSQL_HOST = '10.8.106.103'
+# MYSQL_DATABASE = 'ars_local'
 Base = declarative_base()
 
 
