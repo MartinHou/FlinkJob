@@ -63,7 +63,7 @@ class NodeMonitor(FlatMapFunction):
                         url=self.warning_api,
                         json={
                             "user_id": self.warning_chat_group,
-                            "info": f"FAULT! {value.fault_type} on machine {value.node_name}" + \
+                            "info": f"FAULT! {value.fault_type} on machine {value.node_name} " + \
                                     f"in cluter {value.cluster_name} found at " + \
                                     f"{datetime.datetime.fromtimestamp(value.timestamp)}. " + \
                                     self.warning_assignees_str,
