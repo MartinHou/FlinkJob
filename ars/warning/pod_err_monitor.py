@@ -172,4 +172,4 @@ if __name__ == "__main__":
 
     monitor(env)
 
-    env.execute()
+    env.execute("GPU_err_monitor")

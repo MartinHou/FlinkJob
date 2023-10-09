@@ -245,4 +245,4 @@ if __name__ == "__main__":
     env.set_parallelism(1)
     env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
-    env.execute()
+    env.execute("stat_pod")

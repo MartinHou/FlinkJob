@@ -12,6 +12,9 @@ from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.state import MapStateDescriptor
 
 import requests
+from lib.common.settings import (
+    FLINK_SQL_CONNECTOR_KAFKA_LOC,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -126,10 +129,8 @@ def monitor_node(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars(
-        "file:///home2/hanwen.qiu/dev/ars/flink-jobs/flink-sql-connector-kafka-1.15.4.jar"
-    )
+    env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
 
     monitor_node(env)
 
-    env.execute()
+    env.execute("node_monitor")
