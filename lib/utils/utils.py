@@ -4,6 +4,7 @@ from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_exponential
 from typing import Optional, List
+from collections import defaultdict
 
 
 # Network IO
@@ -47,3 +48,18 @@ def http_request(
     )
 
     return r
+
+
+def defaultdict2dict(obj: any):
+    """
+    Transform defaultdict to dict
+    
+    params:
+        obj: any object (defaultdict if called)
+        
+    return:
+        dict: a python dict
+    """
+    if isinstance(obj, defaultdict):
+        obj = {k: defaultdict2dict(v) for k, v in obj.items()}
+    return obj
