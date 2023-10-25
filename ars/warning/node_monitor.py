@@ -125,7 +125,7 @@ def monitor_node(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars("file:///home2/hanwen.qiu/dev/ars/flink-jobs/flink-sql-connector-kafka-1.15.4.jar")
+    env.add_jars("file:///mnt/data/hanwen.qiu/runtime/flink/flink-sql-connector-kafka-1.15.4.jar")
 
     monitor_node(env)
     
