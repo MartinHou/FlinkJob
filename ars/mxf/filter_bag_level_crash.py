@@ -74,6 +74,7 @@ class Filter(FilterFunction):
     def filter(self, value):
         # print(value.type,value.status,value.coredump)
         # if value.type=='replay'and value.status=='FAILURE' and value.coredump is not None:
+        print(value.result_id, value.status, value.pod_start_timestamp)
         if value.type == 'replay' and value.status == 'FAILURE' and value.backtrace is not None:
             return True
         else:
