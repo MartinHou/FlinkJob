@@ -34,7 +34,7 @@ class NodeMonitor(FlatMapFunction):
     def __init__(self) -> None:
         self.fault_timer = None
         self.fault_timer_descriptor_name = "fault_timer"
-        self.warning_api = "https://ars-dev.ddinfra.momenta.works/api/v1/notification/warn/"
+        self.warning_api = "https://ars.momenta.works/api/v1/notification/warn/"
         self.mq_message_source = "ars_node_monitor"
         self.mq_message_type = "ARSNodeMonitor"
         self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
