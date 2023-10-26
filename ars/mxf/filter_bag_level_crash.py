@@ -12,7 +12,7 @@ from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.common.serialization import SimpleStringSchema
 from pyflink.datastream.connectors import FlinkKafkaProducer
 
-
+FLINK_SQL_CONNECTOR_KAFKA_LOC = '/home/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 KAFKA_TOPIC_OF_NODE_MONITOR = 'ars_prod_node_monitor'
 KAFKA_SERVERS = "10.10.2.224:9092,10.10.2.81:9092,10.10.3.141:9092"
 KAFKA_CONSUMUER_GOURP_ID = "ars_prod"
@@ -117,6 +117,6 @@ def analyse(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars("file:////mnt/data/hanwen.qiu/runtime/flink/flink-sql-connector-kafka-1.15.4.jar")
+    env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
     env.execute()
