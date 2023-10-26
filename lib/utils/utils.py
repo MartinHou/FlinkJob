@@ -63,3 +63,50 @@ def defaultdict2dict(obj: any):
     if isinstance(obj, defaultdict):
         obj = {k: defaultdict2dict(v) for k, v in obj.items()}
     return obj
+
+
+def merge_dicts(dict1, dict2):
+    """Merge two dictionaries with possibly nested keys with int/float endpoint."""
+    if not dict1:
+        return dict2
+    if not dict2:
+        return dict1
+    merged = {}
+    for key in set(dict1.keys()).union(dict2.keys()):
+        if key in dict1 and key in dict2:
+            # 如果key对应的值是int或float，则直接相加
+            if isinstance(dict1[key], (int, float)) and isinstance(dict2[key], (int, float)):
+                merged[key] = dict1[key] + dict2[key]
+            # 如果key对应的值仍然是字典，则递归处理
+            elif all(isinstance(dict_[key], dict) for dict_ in [dict1, dict2]):
+                merged[key] = merge_dicts(dict1[key], dict2[key])
+            else:
+                # 保留有该key的那个dict的值
+                merged[key] = dict1[key] if key in dict1 else dict2[key]
+        else:
+            merged[key] = dict1[key] if key in dict1 else dict2[key]
+    return merged
+
+def add_value_to_dict(dictionary, value, *keys):
+    temp = dictionary
+    for key in keys[:-1]:
+        if key not in temp or not isinstance(temp[key], dict):
+            temp[key] = {}
+        temp = temp[key]
+    if keys[-1] not in temp:
+        temp[keys[-1]] = value
+    else:
+        temp[keys[-1]] += value
+        
+def overwrite_value_to_dict(dictionary, value, *keys):
+    temp = dictionary
+    for key in keys[:-1]:
+        if key not in temp or not isinstance(temp[key], dict):
+            temp[key] = {}
+        temp = temp[key]
+    temp[keys[-1]] = value
+    
+if __name__=='__main__':
+    a = {'a':{'b':3}}
+    overwrite_value_to_dict(a,1,'a','b')
+    print(a)

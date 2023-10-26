@@ -69,7 +69,9 @@ class PodErrMonitor(ProcessWindowFunction):
             yield 'normal: ' + str(len(elements))
         else:
             node_name = key
+            print('Found error on node: ' + node_name)
             workflows = []
+            print(elements)
             for ele in elements:
                 pod_name = self.parse_pod_name(ele.job_name)
                 if not self.retried_pods.contains(pod_name):
@@ -77,7 +79,7 @@ class PodErrMonitor(ProcessWindowFunction):
                     self.retried_pods.put(pod_name, True)
             # cordon node
             if not self.cordoned_nodes.contains(node_name):
-                print(f'cordon: {node_name}')
+                print(f'Cordon: {node_name}')
                 self.cordoned_nodes.put(node_name, True)
                 body = {
                     "cluster_name": "ddinfra-prod",
@@ -95,11 +97,11 @@ class PodErrMonitor(ProcessWindowFunction):
                     if response.status_code == 200:
                         self.cordoned_nodes.put(node_name, True)
                 except Exception as e:
-                    print(f'error: {e}')
+                    print(f'Cordon failed for {node_name}: {e}')
 
             # retry pods
             if workflows:
-                print(f'提升优先级到3: {workflows}')
+                print(f'Improve priority to 3 from node {node_name}: {workflows}')
                 try:
                     http_request(
                         method='PUT',
@@ -110,16 +112,19 @@ class PodErrMonitor(ProcessWindowFunction):
                             'Authorization': 'Token ' + ARS_API_ROOT_TOKEN
                         })
                 except Exception as e:
-                    print(f"error: {e}")
+                    print(f"Improve priority failed from node {node_name}, error: {e}")
 
             if self.last_warn_timestamp.value() is not None \
                     and datetime.now() - datetime.fromtimestamp(self.last_warn_timestamp.value()) <= timedelta(minutes=5):
+                print(f'cooling {node_name}, last: ' + datetime.strftime(
+                    datetime.fromtimestamp(self.last_warn_timestamp.value()),
+                    '%Y-%m-%d %H:%M:%S'))
                 yield 'cooling, last: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S')
             else:
                 print(
-                    f"通知: {node_name}在{datetime.fromtimestamp(float(elements[0].timestamp)/1000)}"
+                    f"Send warning: {node_name} at {datetime.fromtimestamp(float(elements[0].timestamp)/1000)}"
                 )
                 if self.last_warn_timestamp.value() is not None:
                     self.retried_pods.clear()
@@ -138,7 +143,7 @@ class PodErrMonitor(ProcessWindowFunction):
                         "message_id": "1"
                     })
                 except Exception as e:
-                    print(f"error: {e}")
+                    print(f"Failed to send warning, node:{node_name}. Err: {e}")
                 self.last_warn_timestamp.update(datetime.now().timestamp())
                 yield 'alert: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
@@ -162,7 +167,7 @@ def monitor(env: StreamExecutionEnvironment):
         .key_by(lambda x: x['node_name']) \
         .window(SlidingProcessingTimeWindows.of(WINDOW_SIZE,WINDOW_SLIDE))\
         .process(PodErrMonitor(WINDOW_SIZE,WINDOW_SLIDE))\
-        # .print()
+        .print()
 
 
 if __name__ == "__main__":

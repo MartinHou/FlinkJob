@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Filter(FilterFunction):
     def filter(self, value):
-        return len(dict(json.loads(value.metric)).keys()) != 0
+        return value.metric != '{}'
 
 
 class MyflatmapFunction(FlatMapFunction):
@@ -56,14 +56,15 @@ class MyflatmapFunction(FlatMapFunction):
 
         if max_minute_int - value[
                 'minutetime_int'] > self.delay_time:  # 过期数据，丢弃
-            return iter([])
+            with open('nonono.txt','+a') as f:
+                f.write('1'+'\n')
+            # return iter([])
 
         self.minute_data.put(value['minutetime_int'], json.dumps(result))
         if count_json is None:
             if max_minute_int == 0:  # kafka来的第一条数据
                 return iter([])
-            if value[
-                    'minutetime_int'] > max_minute_int and max_minute_int != 0:  # 这是更大的分钟，把前一分钟数据持久化
+            if value['minutetime_int'] > max_minute_int:  # 这是更大的分钟，把前一分钟数据持久化
                 self.record_minute(self.minute_data.get(max_minute_int))
             else:  # 不是最新的分钟
                 self.update_day_state(value)
@@ -147,7 +148,7 @@ class MyflatmapFunction(FlatMapFunction):
 
     def stat_replay_time_consuming_group_by_category(self, json_str, tag: str):
         json_mysql = json.loads(json_str)
-        stat_date = json_mysql['daytime'] + ' 00:00:00'
+        stat_date = json_mysql['daytime']
         name = tag
         period = 'daily'
         statis_one = StatisticsActions()
@@ -194,6 +195,7 @@ class MyflatmapFunction(FlatMapFunction):
 
             self.stat_replay_time_consuming_group_by_category(
                 json_str=self.day_data.get(daytime_int_one), tag=self.tag)
+        self.changed_days.clear()
 
     def update_day_state(self, value: dict):
         daytime_int = value['daytime_int']
@@ -211,21 +213,21 @@ def analyse(env: StreamExecutionEnvironment):
         get_flink_kafka_consumer(
             schema=TEST_ARS_WORKFLOW_SCHEMA,
             topic=KAFKA_TOPIC_OF_ARS_WORKFLOW,
-            group_id='martin_stat_consuming',
+            group_id='martin_stat_consuming2',
             start_date=START_TIME))
     stat_replay_time_consuming_group_by_category = stream.filter(Filter()).map(
         lambda x: {
-            'daytime_int': datetime_str_to_int(x.update_time),
-            'time_int': time_str_to_int(x.update_time),
-            'time': x.update_time,
-            'daytime': timestr_to_datestr(x.update_time),
-            'minutetime_int': timestr_to_minute_int(x.update_time),
-            'minutetime': timestr_to_minutestr(x.update_time),
+            'daytime_int':timestr_to_day_int(x['update_time']),
+            'time_int':str_to_timestamp(x['update_time']),
+            'time':x['update_time'],
+            'daytime':timestr_to_daystr(x['update_time']),
+            'minutetime_int':timestr_to_minute_int(x['update_time']),
+            'minutetime':timestr_to_minutestr(x['update_time']),
             'device':x.device,
             'category':x.category,
             'bags_profile_summary':json.loads(x.metric)['bags_profile_summary']
             }).key_by(lambda x:x['device']+x['category'])\
-                .flat_map(MyflatmapFunction(tag='REALTIME_stat_replay_time_consuming_group_by_category'))
+                .flat_map(MyflatmapFunction(tag='stat_replay_time_consuming_group_by_category'))
 
 
 if __name__ == "__main__":

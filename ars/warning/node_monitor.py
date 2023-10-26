@@ -13,8 +13,7 @@ from pyflink.datastream.state import MapStateDescriptor
 
 import requests
 from lib.common.settings import (
-    FLINK_SQL_CONNECTOR_KAFKA_LOC,
-)
+    FLINK_SQL_CONNECTOR_KAFKA_LOC, )
 
 logger = logging.getLogger(__name__)
 

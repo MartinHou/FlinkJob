@@ -11,7 +11,7 @@ Base = declarative_base()
 
 
 class Statistics(Base):
-    __tablename__ = 'statistics'
+    __tablename__ = 'statistics_new2'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(256), nullable=False)
@@ -58,7 +58,7 @@ engine = create_engine(
     ':3306/' + MYSQL_DATABASE,
     pool_size=100,
     max_overflow=200,
-    pool_recycle=3600)
+    pool_recycle=60)
 
 # 创建会话工厂
 Session = sessionmaker(bind=engine)
@@ -121,12 +121,13 @@ class StatisticsActions:
         # 创建会话
         session = Session()
 
+        try:
         # 找到要获取的统计记录
-        statistics = session.query(Statistics).filter_by(
-            name=name, period=period, stat_date=stat_date)
-
-        # 关闭会话
-        session.close()
+            statistics = session.query(Statistics).filter_by(
+                name=name, period=period, stat_date=stat_date).all()
+        finally:
+            # 关闭会话
+            session.close()
 
         # 返回统计记录
         return statistics
@@ -134,8 +135,8 @@ class StatisticsActions:
 
 if __name__ == "__main__":
     stati = StatisticsActions()
-    stati.add_statistics(
-        name='stat_failure_pod_group_by_type',
+    res = stati.get_statistics(
+        name='REALTIME_stat_replay_error_bag_count_group_by_category',
         period='daily',
-        stat_date='2023-07-03 00:00:00',
-        info={})
+        stat_date='2023-10-19 00:00:00')
+    print(res[0].info)
