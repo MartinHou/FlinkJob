@@ -51,10 +51,10 @@ def stat_pod():
         if latest_timestamps and all(ts >= stat_dt.timestamp()*1000 for ts in latest_timestamps.values()):
             break
         one = json.loads(message.value)
-        update_time = one['update_time']
+        # update_time = one['update_time']
         # if update_time > '2023-10-27':
         #     continue
-        print(update_time)
+        # print(update_time)
         
         leng+=1
         workflow_type=one['workflow_type']
@@ -113,7 +113,7 @@ def stat_pod():
     consumer.close()
         
     print(res)
-    print(leng)
+    print(stat_dt,leng)
     stat_action = StatisticsActions()
     for name, info in res.items():
         stat_action.add_or_update_statistics(name=name,period='daily',stat_date=dt,info=info)
