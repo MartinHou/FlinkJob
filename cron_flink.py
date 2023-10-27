@@ -114,6 +114,8 @@ def stat_pod():
         
     print(res)
     print(stat_dt,leng)
+    print()
+    
     stat_action = StatisticsActions()
     for name, info in res.items():
         stat_action.add_or_update_statistics(name=name,period='daily',stat_date=dt,info=info)
@@ -155,7 +157,7 @@ def stat_bag():
             break
         # if ts > 1000*datetime_to_timestamp(datetime(2023,10,27)):
         #     continue
-        print(datetime.fromtimestamp(ts/1000))
+        # print(datetime.fromtimestamp(ts/1000))
         
         one = json.loads(message.value)
         leng += 1
@@ -181,8 +183,9 @@ def stat_bag():
             
     consumer.close()
     
-    print(leng)
     print(res)
+    print(stat_dt,leng)
+    print()
     stat_action = StatisticsActions()
     for name, info in res.items():
         stat_action.add_or_update_statistics(name=name,period='daily',stat_date=dt,info=info)
