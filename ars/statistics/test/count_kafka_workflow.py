@@ -14,8 +14,8 @@ def time_str_to_int(time_str: str) -> int:
 
 if __name__ == "__main__":
     # 创建一个Kafka消费者
-    topic = 'ars_prod_pod_result'
-    dt = datetime(2023, 10, 23)
+    topic = 'ars_prod_bag_result'
+    dt = datetime(2023, 10, 25)
     timestamp = int(dt.timestamp() * 1000)
     consumer = KafkaConsumer(
         # 订阅的主题名
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         data = []
         amnt = 0
         for message in consumer:
-            if message.timestamp >= 1000*time_str_to_int("2023-10-25 0:0:0"):
+            if message.timestamp >= 1000*time_str_to_int("2023-10-28 0:0:0"):
                 continue
             print(datetime.fromtimestamp(message.timestamp/1000))
             

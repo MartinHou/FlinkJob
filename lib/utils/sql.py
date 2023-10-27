@@ -11,7 +11,7 @@ Base = declarative_base()
 
 
 class Statistics(Base):
-    __tablename__ = 'statistics_new2'
+    __tablename__ = 'statistics_new'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(256), nullable=False)
@@ -93,6 +93,30 @@ class StatisticsActions:
         # 更新统计记录信息
         if info:
             statistics.info = info
+
+        # 提交事务
+        session.commit()
+
+        # 关闭会话
+        session.close()
+        
+    def add_or_update_statistics(self, name, period, stat_date, info):
+        # 创建会话
+        session = Session()
+
+        # 尝试找到已经存在的统计记录
+        statistics = session.query(Statistics).filter_by(
+            name=name, period=period, stat_date=stat_date).first()
+
+        if statistics:
+            # 如果统计记录存在，更新信息
+            if info:
+                statistics.info = info
+        else:
+            # 如果统计记录不存在，创建新的统计记录并添加
+            new_statistics = Statistics(
+                name=name, period=period, stat_date=stat_date, info=info)
+            session.add(new_statistics)
 
         # 提交事务
         session.commit()

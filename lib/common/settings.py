@@ -4,7 +4,7 @@ LOG_URL = '/home/martin.hou/flink-jobs/ars/workflow/log'
 FLINK_SQL_CONNECTOR_KAFKA_LOC = '/home/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 
 # START_TIME = datetime.combine((datetime.now()-timedelta(days=1)).date(), time(0))
-START_TIME = datetime(2023,10,24)
+START_TIME = datetime(2023,10,26)
 END_TIME = START_TIME + timedelta(days=1)
 KILL_TIME = END_TIME + timedelta(hours=24)
 START_MON, START_DAY = START_TIME.strftime("%m-%d").split('-')

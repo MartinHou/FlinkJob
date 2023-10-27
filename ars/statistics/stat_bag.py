@@ -88,7 +88,7 @@ class HandleDurationFlatMap(FlatMapFunction):
             self.fill_state(value, value['monthdt'], value['daydt'], self.this_month_data)
         if self.dt_thisweek.value() is None:
             self.dt_thisweek.update(datetime_to_str(value['weekdt']))
-            self.fill_state(value, value['weekdt'], value['datetime'], self.this_week_data)
+            self.fill_state(value, value['weekdt'], value['daydt'], self.this_week_data)
         if self.dt_today.value() is None:
             self.dt_today.update(datetime_to_str(value['daydt']))
             self.today_data.update(0)
@@ -98,7 +98,7 @@ class HandleDurationFlatMap(FlatMapFunction):
         # check if day level data is expired
         if self.today_data.value() is not None:
             if daydt>str_to_datetime(self.dt_today.value()):
-                self.yesterday_data.update(self.dt_today.value())
+                self.yesterday_data.update(self.today_data.value())
                 self.today_data.update(0)
                 self.dt_yesterday.update(self.dt_today.value())
                 self.dt_today.update(datetime_to_str(daydt))
@@ -108,9 +108,9 @@ class HandleDurationFlatMap(FlatMapFunction):
                 self.yesterday_data.update(0)
     
         # check if week level data is expired
-        if self.this_week_data is not None:
+        if self.this_week_data.value() is not None:
             if weekdt>str_to_datetime(self.dt_thisweek.value()):
-                self.last_week_data.update(self.dt_thisweek.value())
+                self.last_week_data.update(self.this_week_data.value())
                 self.this_week_data.update(0)
                 self.dt_lastweek.update(self.dt_thisweek.value())
                 self.dt_thisweek.update(datetime_to_str(weekdt))
@@ -120,9 +120,9 @@ class HandleDurationFlatMap(FlatMapFunction):
                 self.last_week_data.update(0)
                 
         # check if month level data is expired
-        if self.this_month_data is not None:
+        if self.this_month_data.value() is not None:
             if monthdt>str_to_datetime(self.dt_thismonth.value()):
-                self.last_month_data.update(self.dt_thismonth.value())
+                self.last_month_data.update(self.this_month_data.value())
                 self.this_month_data.update(0)
                 self.dt_lastmonth.update(self.dt_thismonth.value())
                 self.dt_thismonth.update(datetime_to_str(monthdt))
@@ -199,14 +199,14 @@ class HandleDurationFlatMap(FlatMapFunction):
             self.last_fire_dt.update(datetime_to_str(value['datetime']))
             self.write_sql(value['label'])
         yield {
-            'day_data': self.today_data.value(),
-            'week_data': self.this_week_data.value(),
-            'month_data': self.this_month_data.value(),
-            'label': value['label'],
             'time': datetime_to_str(value['datetime']),
-            'day': datetime_to_str(value['daydt']),
-            'week': datetime_to_str(value['weekdt']),
-            'month': datetime_to_str(value['monthdt']),
+            # 'day': datetime_to_str(value['daydt']),
+            # 'week': datetime_to_str(value['weekdt']),
+            # 'month': datetime_to_str(value['monthdt']),
+            # 'day_data': self.today_data.value(),
+            # 'week_data': self.this_week_data.value(),
+            # 'month_data': self.this_month_data.value(),
+            # 'label': value['label'],
         }
         
 # ================= Count Error bag down here! =======================
@@ -216,13 +216,13 @@ class CountErrorTimeProcess(ProcessFunction):
         update_time_ts = int(ctx.timestamp() / 1000)
         update_time_dt = datetime.fromtimestamp(update_time_ts)
         result = {
-            'group':value['group'],
-            'error_stage':value['error_stage'],
-            'error_type':value['error_type'],
             'datetime': update_time_dt,
             'daydt': dt_to_dayobj(update_time_dt),
             'weekdt': dt_to_weekobj(update_time_dt),
             'monthdt': dt_to_monthobj(update_time_dt),
+            'group':value['group'],
+            'error_stage':value['error_stage'],
+            'error_type':value['error_type'],
         }
         yield result
 
@@ -276,7 +276,7 @@ class HandleErrorFlatMap(FlatMapFunction):
             self.fill_state(value, value['monthdt'], value['daydt'], self.this_month_data)
         if self.dt_thisweek.value() is None:
             self.dt_thisweek.update(datetime_to_str(value['weekdt']))
-            self.fill_state(value, value['weekdt'], value['datetime'], self.this_week_data)
+            self.fill_state(value, value['weekdt'], value['daydt'], self.this_week_data)
         if self.dt_today.value() is None:
             self.dt_today.update(datetime_to_str(value['daydt']))
             self.today_data.update(0)
@@ -286,7 +286,7 @@ class HandleErrorFlatMap(FlatMapFunction):
         # check if day level data is expired
         if self.today_data.value() is not None:
             if daydt>str_to_datetime(self.dt_today.value()):
-                self.yesterday_data.update(self.dt_today.value())
+                self.yesterday_data.update(self.today_data.value())
                 self.today_data.update(0)
                 self.dt_yesterday.update(self.dt_today.value())
                 self.dt_today.update(datetime_to_str(daydt))
@@ -296,9 +296,9 @@ class HandleErrorFlatMap(FlatMapFunction):
                 self.yesterday_data.update(0)
     
         # check if week level data is expired
-        if self.this_week_data is not None:
+        if self.this_week_data.value() is not None:
             if weekdt>str_to_datetime(self.dt_thisweek.value()):
-                self.last_week_data.update(self.dt_thisweek.value())
+                self.last_week_data.update(self.this_week_data.value())
                 self.this_week_data.update(0)
                 self.dt_lastweek.update(self.dt_thisweek.value())
                 self.dt_thisweek.update(datetime_to_str(weekdt))
@@ -308,9 +308,9 @@ class HandleErrorFlatMap(FlatMapFunction):
                 self.last_week_data.update(0)
                 
         # check if month level data is expired
-        if self.this_month_data is not None:
+        if self.this_month_data.value() is not None:
             if monthdt>str_to_datetime(self.dt_thismonth.value()):
-                self.last_month_data.update(self.dt_thismonth.value())
+                self.last_month_data.update(self.this_month_data.value())
                 self.this_month_data.update(0)
                 self.dt_lastmonth.update(self.dt_thismonth.value())
                 self.dt_thismonth.update(datetime_to_str(monthdt))
@@ -387,13 +387,13 @@ class HandleErrorFlatMap(FlatMapFunction):
             self.last_fire_dt.update(datetime_to_str(value['datetime']))
             self.write_sql(value['group'],value['error_stage'],value['error_type'])
         yield {
-            'day_data': self.today_data.value(),
-            'week_data': self.this_week_data.value(),
-            'month_data': self.this_month_data.value(),
             'time': datetime_to_str(value['datetime']),
-            'day': datetime_to_str(value['daydt']),
-            'week': datetime_to_str(value['weekdt']),
-            'month': datetime_to_str(value['monthdt']),
+            # 'day': datetime_to_str(value['daydt']),
+            # 'week': datetime_to_str(value['weekdt']),
+            # 'month': datetime_to_str(value['monthdt']),
+            # 'day_data': self.today_data.value(),
+            # 'week_data': self.this_week_data.value(),
+            # 'month_data': self.this_month_data.value(),
         }
         
 
@@ -404,30 +404,30 @@ def analyse(env):
             topic=KAFKA_TOPIC_OF_ARS_BAG,
             group_id='stat_bag',
             start_date=START_TIME))
-
-    stat_replay_success_bag_duration_group_by_mode=stream.filter(BagDurationFilter())\
-        .process(AddDurationTimeProcess())\
-        .map(lambda x:
-            {
-                **x,
-                'label': x['mode'],
-            })\
-        .key_by(lambda x:x['label'])\
-        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_mode'))\
-        .print()
-
-    stat_replay_success_bag_duration_group_by_category=stream.filter(BagDurationFilter())\
-        .process(AddDurationTimeProcess())\
-        .map(lambda x:
-            {
-                **x,
-                'label': x['group'],
-            })\
-        .key_by(lambda x:x['label'])\
-        .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_category'))\
-        .print()
-
+    
     try:
+        stat_replay_success_bag_duration_group_by_mode=stream.filter(BagDurationFilter())\
+            .process(AddDurationTimeProcess())\
+            .map(lambda x:
+                {
+                    **x,
+                    'label': x['mode'],
+                })\
+            .key_by(lambda x:x['label'])\
+            .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_mode'))\
+            .print()
+
+        stat_replay_success_bag_duration_group_by_category=stream.filter(BagDurationFilter())\
+            .process(AddDurationTimeProcess())\
+            .map(lambda x:
+                {
+                    **x,
+                    'label': x['group'],
+                })\
+            .key_by(lambda x:x['label'])\
+            .flat_map(HandleDurationFlatMap(tag='stat_replay_success_bag_duration_group_by_category'))\
+            .print()
+
         stat_replay_error_bag_count_group_by_category = stream.filter(lambda x:x.type == 'replay' and x.error_type!='')\
             .process(CountErrorTimeProcess())\
             .key_by(lambda x:f"{x['group']}$${x['error_stage']}$${x['error_type']}")\
