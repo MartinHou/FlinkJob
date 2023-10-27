@@ -11,7 +11,7 @@ Base = declarative_base()
 
 
 class Statistics(Base):
-    __tablename__ = 'statistics_new'
+    __tablename__ = 'statistics'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(256), nullable=False)
