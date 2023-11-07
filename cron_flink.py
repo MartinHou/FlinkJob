@@ -59,6 +59,8 @@ def stat_pod():
         leng+=1
         workflow_type=one['workflow_type']
         category=one['category']
+        if category == 'cp':
+            category = 'CP'
         bag_nums=one['bag_nums']
         workflow_status=one['workflow_status']
         device = one['device']
@@ -165,6 +167,8 @@ def stat_bag():
         # init
         workflow_type = one['type']
         group = one['group']
+        if group == 'cp':
+            group = 'CP'
         error_stage = one['error_stage']
         error_type = one['error_type']
         mode = one['config']['extra_args']['mode']
