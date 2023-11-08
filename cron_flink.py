@@ -113,10 +113,8 @@ def stat_pod():
             res['stat_replay_time_consuming_group_by_category'] = merge_dicts({device:{category:bags_profile_summary}},res['stat_replay_time_consuming_group_by_category'])
 
     consumer.close()
-        
-    print(res)
-    print(stat_dt,leng)
-    print()
+    
+    print('pod',stat_dt,leng)
     
     stat_action = StatisticsActions()
     for name, info in res.items():
@@ -187,9 +185,7 @@ def stat_bag():
             
     consumer.close()
     
-    print(res)
-    print(stat_dt,leng)
-    print()
+    print('bag',stat_dt,leng)
     stat_action = StatisticsActions()
     for name, info in res.items():
         stat_action.add_or_update_statistics(name=name,period='daily',stat_date=dt,info=info)
