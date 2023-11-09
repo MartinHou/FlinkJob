@@ -170,7 +170,7 @@ def stat_bag():
         error_stage = one['error_stage']
         error_type = one['error_type']
         mode = None
-        if 'extra_args' in one['config'] and 'extra_args' in one['config'] and 'mode' in one['config']['extra_args']:
+        if 'extra_args' in one['config'] and 'mode' in one['config']['extra_args']:
             mode = one['config']['extra_args']['mode']
         output_bag = one['output_bag']
         duration = None
