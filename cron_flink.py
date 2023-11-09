@@ -169,7 +169,9 @@ def stat_bag():
             group = 'CP'
         error_stage = one['error_stage']
         error_type = one['error_type']
-        mode = one['config']['extra_args']['mode']
+        mode = None
+        if 'extra_args' in one['config'] and 'extra_args' in one['config'] and 'mode' in one['config']['extra_args']:
+            mode = one['config']['extra_args']['mode']
         output_bag = one['output_bag']
         duration = None
         if 'bag_duration' in one['metric']:
@@ -177,7 +179,8 @@ def stat_bag():
             
         # cal
         if workflow_type=='replay' and output_bag!='' and duration is not None:
-            add_value_to_dict(res,duration,'stat_replay_success_bag_duration_group_by_mode',mode)
+            if mode:
+                add_value_to_dict(res,duration,'stat_replay_success_bag_duration_group_by_mode',mode)
             add_value_to_dict(res,duration,'stat_replay_success_bag_duration_group_by_category',group)
             
         if workflow_type == 'replay' and error_type!='':
