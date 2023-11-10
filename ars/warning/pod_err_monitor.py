@@ -65,6 +65,8 @@ class PodErrMonitor(ProcessWindowFunction):
             self.cordoned_nodes_descriptor)
 
     def process(self, key, context, elements):
+        print(datetime.fromtimestamp(float(elements[0].timestamp)/1000))
+        exit()
         if len(elements) < 5:
             yield 'normal: ' + str(len(elements))
         else:

@@ -21,4 +21,6 @@ def get_flink_kafka_consumer(schema, topic, group_id, start_date=None):
         date_object = start_date
         kafka_consumer.set_start_from_timestamp(
             int(date_object.timestamp()) * 1000)
+    else:
+        kafka_consumer.set_start_from_latest()
     return kafka_consumer
