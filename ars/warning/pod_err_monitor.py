@@ -101,7 +101,9 @@ class PodErrMonitor(ProcessWindowFunction):
 
             # retry pods
             if workflows:
-                print(f'Improve priority to 3 from node {node_name}: {workflows}')
+                print(
+                    f'Improve priority to 3 from node {node_name}: {workflows}'
+                )
                 try:
                     http_request(
                         method='PUT',
@@ -112,10 +114,12 @@ class PodErrMonitor(ProcessWindowFunction):
                             'Authorization': 'Token ' + ARS_API_ROOT_TOKEN
                         })
                 except Exception as e:
-                    print(f"Improve priority failed from node {node_name}, error: {e}")
+                    print(
+                        f"Improve priority failed from node {node_name}, error: {e}"
+                    )
 
             if self.last_warn_timestamp.value() is not None \
-                    and datetime.now() - datetime.fromtimestamp(self.last_warn_timestamp.value()) <= timedelta(minutes=5):
+                    and datetime.fromtimestamp(float(elements[0].timestamp)/1000) - datetime.fromtimestamp(self.last_warn_timestamp.value()) <= timedelta(minutes=5):
                 print(f'cooling {node_name}, last: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S'))
@@ -143,8 +147,9 @@ class PodErrMonitor(ProcessWindowFunction):
                         "message_id": "1"
                     })
                 except Exception as e:
-                    print(f"Failed to send warning, node:{node_name}. Err: {e}")
-                self.last_warn_timestamp.update(datetime.now().timestamp())
+                    print(
+                        f"Failed to send warning, node:{node_name}. Err: {e}")
+                self.last_warn_timestamp.update(float(elements[-1].timestamp)/1000)
                 yield 'alert: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S')
