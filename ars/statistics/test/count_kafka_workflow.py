@@ -20,18 +20,20 @@ if __name__ == "__main__":
     consumer = KafkaConsumer(
         # 订阅的主题名
         # 'ars_prod_bag_result',
-        bootstrap_servers=['10.10.2.224:9092','10.10.2.81:9092','10.10.3.141:9092'],  # Kafka集群的地址
+        bootstrap_servers=[
+            '10.10.2.224:9092', '10.10.2.81:9092', '10.10.3.141:9092'
+        ],  # Kafka集群的地址
         group_id=f'test-martin',  # 这个消费者所在的组
         value_deserializer=lambda x: x.decode('utf-8'),
         auto_offset_reset='earliest')
 
     # topic_partition = TopicPartition('ars_prod_bag_result', 0)
-    partitions = consumer.partitions_for_topic(topic)   # 改topic 1/2
+    partitions = consumer.partitions_for_topic(topic)  # 改topic 1/2
     if partitions is None:
         print(f"No partitions for topic {topic}")
         exit(1)
 
-    tp_list = [TopicPartition(topic, p) for p in partitions]    # 改topic 2/2
+    tp_list = [TopicPartition(topic, p) for p in partitions]  # 改topic 2/2
     offsets = consumer.offsets_for_times({tp: timestamp for tp in tp_list})
 
     consumer.assign(tp_list)
@@ -69,31 +71,32 @@ if __name__ == "__main__":
         data = []
         amnt = 0
         for message in consumer:
-            if message.timestamp >= 1000*time_str_to_int("2023-10-28 0:0:0"):
+            if message.timestamp >= 1000 * time_str_to_int("2023-10-28 0:0:0"):
                 continue
-            print(datetime.fromtimestamp(message.timestamp/1000))
-            
+            print(datetime.fromtimestamp(message.timestamp / 1000))
+
             one = json.loads(message.value)
-            
+
             # if one['pod_id']=='7d587ae5e1a34a86bfaf788edd46cfd4':
             #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11")
-            
+
             # if one['workflow_id']=='2176b0eb1b3e4108a5a72a4df60f6f74':
             #     print(one['update_time'])
             #     break
-                
+
             # if one['update_time']>='2023-10-25':
             #     continue
-            
+
             # if one['type']=='replay' and one['output_bag']!='' and one['group']=='LidarRB':  # and one['category']=='Evaluation System'
             #     metirc = one['metric']
             #     if 'bag_duration' in metirc:
             #         amnt += metirc['bag_duration']
             #     # data.append(one['result_id'])
             #     length += 1
-            
-            if one['metric']!='{}' and one['device']=='x86-2080' and one['category']=='APA':
-                amnt+=one['metric']['bags_profile_summary']['total']['total']
+
+            if one['metric'] != '{}' and one['device'] == 'x86-2080' and one[
+                    'category'] == 'APA':
+                amnt += one['metric']['bags_profile_summary']['total']['total']
 
     except KeyboardInterrupt:
         # 用户按了Ctrl+C，就退出程序

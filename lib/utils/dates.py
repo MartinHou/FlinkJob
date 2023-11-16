@@ -45,7 +45,8 @@ def datetime_to_str(datetime: datetime) -> str:
 def str_to_timestamp(time_str: str) -> int:
     return datetime_to_timestamp(
         datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S"))
-    
+
+
 def str_to_datetime(time_str: str) -> datetime:
     return datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
 
@@ -81,12 +82,16 @@ def timestr_to_day_int(time_str: str) -> int:
 def timestr_to_daystr(time_str: str) -> str:
     return datetime_to_str(timestr_to_day_obj(time_str))
 
+
 def dt_to_dayobj(dt: datetime) -> int:
     return dt.replace(hour=0, minute=0, second=0)
+
 
 def dt_to_dayint(dt: datetime) -> int:
     daydt = dt_to_dayobj(dt)
     return datetime_to_timestamp(daydt)
+
+
 """ week """
 
 
@@ -102,10 +107,11 @@ def timestr_to_week_int(time_str: str) -> int:
 def timestr_to_weekstr(time_str: str) -> str:
     return datetime_to_str(timestr_to_week_obj(time_str))
 
+
 def dt_to_weekobj(dt: datetime) -> int:
-    monday_date_time_obj = dt - timedelta(
-        days=dt.weekday())
+    monday_date_time_obj = dt - timedelta(days=dt.weekday())
     return monday_date_time_obj.replace(hour=0, minute=0, second=0)
+
 
 def dt_to_weekint(dt: datetime) -> int:
     weekdt = dt_to_weekobj(dt)
@@ -127,9 +133,11 @@ def timestr_to_month_int(time_str: str) -> int:
 def timestr_to_monthstr(time_str: str) -> str:
     return datetime_to_str(timestr_to_month_obj(time_str))
 
+
 def dt_to_monthobj(dt: datetime) -> int:
     return dt.replace(day=1, hour=0, minute=0, second=0)
-    
+
+
 def dt_to_monthint(dt: datetime) -> int:
     monthdt = dt_to_monthobj(dt)
     return datetime_to_timestamp(monthdt)

@@ -6,18 +6,18 @@ from beautifultable import BeautifulTable
 
 prod_sql = """
 SELECT name,info FROM statistics
-where name not like 'REALTIME%%' and stat_date = '2023-10-26 00:00:00' and period="daily";
+where name not like 'REALTIME%%' and stat_date = '2023-10-27 00:00:00' and period="daily";
 """
 local_sql = """
 SELECT name,info FROM statistics_new
-where stat_date = '2023-10-26 00:00:00' and period="daily";
+where stat_date = '2023-10-27 00:00:00' and period="daily";
 """
 
 prod_engine = get_engine('./etc/prod_mysql.conf')
 local_engine = get_engine('./etc/local_mysql.conf')
 
 
-def get_cnt(engine,sql):
+def get_cnt(engine, sql):
     with engine.connect() as connection:
         prod_doc = pd.read_sql(
             sql, con=connection).astype({
@@ -31,8 +31,8 @@ def get_cnt(engine,sql):
         if row['name'] == 'stat_replay_error_bag_count_group_by_category':
             continue
         elif row['name'] == 'stat_replay_time_consuming_group_by_category':
-            for device,ele in info.items():
-                for group,ele1 in ele.items():
+            for device, ele in info.items():
+                for group, ele1 in ele.items():
                     if 'total' not in ele1 or 'total' not in ele1['total']:
                         continue
                     res[device][group] += ele1['total']['total']
@@ -46,8 +46,9 @@ def get_cnt(engine,sql):
     return res
 
 
-res_local, res_prod = pd.DataFrame(get_cnt(local_engine,local_sql)), pd.DataFrame(
-    get_cnt(prod_engine,prod_sql))
+res_local, res_prod = pd.DataFrame(get_cnt(local_engine,
+                                           local_sql)), pd.DataFrame(
+                                               get_cnt(prod_engine, prod_sql))
 # print(res_local,res_prod)
 cmp = pd.merge(
     res_local,

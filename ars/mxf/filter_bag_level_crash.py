@@ -54,7 +54,7 @@ VALUES = [TEST_ARS_BAG_SCHEMA[k] for k in KEYS]
 serialization_schema = JsonRowDeserializationSchema.Builder() \
     .type_info(Types.ROW_NAMED(KEYS, VALUES)) \
     .build()
-        
+
 logger = logging.getLogger(__name__)
 
 # class Flatten(FlatMapFunction):
@@ -100,18 +100,17 @@ def read_from_kafka():
 def analyse(env: StreamExecutionEnvironment):
     stream = env.add_source(read_from_kafka())
     result = stream.filter(Filter()).map(
-        lambda x: json.dumps(named_tuple_to_dict(x)), 
+        lambda x: json.dumps(named_tuple_to_dict(x)),
         output_type=Types.STRING(),
     ).add_sink(
         sink_func=FlinkKafkaProducer(
-            topic=KAFKA_TOPIC_OF_ARS_BAG_CRASH, 
-            serialization_schema=SimpleStringSchema(), 
+            topic=KAFKA_TOPIC_OF_ARS_BAG_CRASH,
+            serialization_schema=SimpleStringSchema(),
             producer_config={
                 'bootstrap.servers': KAFKA_SERVERS,
-                'group.id': KAFKA_PRODUCER_GOURP_ID,   
+                'group.id': KAFKA_PRODUCER_GOURP_ID,
             },
-        ),
-    )
+        ), )
 
 
 if __name__ == "__main__":

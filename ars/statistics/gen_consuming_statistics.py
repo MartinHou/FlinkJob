@@ -56,8 +56,8 @@ class MyflatmapFunction(FlatMapFunction):
 
         if max_minute_int - value[
                 'minutetime_int'] > self.delay_time:  # 过期数据，丢弃
-            with open('nonono.txt','+a') as f:
-                f.write('1'+'\n')
+            with open('nonono.txt', '+a') as f:
+                f.write('1' + '\n')
             # return iter([])
 
         self.minute_data.put(value['minutetime_int'], json.dumps(result))

@@ -76,10 +76,13 @@ def merge_dicts(dict1, dict2):
         for key in set(dict1.keys()).union(set(dict2.keys())):
             if key in dict1 and key in dict2:
                 # 如果key对应的值是int或float，则直接相加
-                if isinstance(dict1[key], (int, float)) and isinstance(dict2[key], (int, float)):
+                if isinstance(dict1[key], (int, float)) and isinstance(
+                        dict2[key], (int, float)):
                     merged[key] = dict1[key] + dict2[key]
                 # 如果key对应的值仍然是字典，则递归处理
-                elif all(isinstance(dict_[key], dict) for dict_ in [dict1, dict2]):
+                elif all(
+                        isinstance(dict_[key], dict)
+                        for dict_ in [dict1, dict2]):
                     merged[key] = merge_dicts(dict1[key], dict2[key])
                 else:
                     # 保留有该key的那个dict的值
@@ -92,6 +95,7 @@ def merge_dicts(dict1, dict2):
         raise
     return merged
 
+
 def add_value_to_dict(dictionary, value, *keys):
     temp = dictionary
     for key in keys[:-1]:
@@ -102,7 +106,8 @@ def add_value_to_dict(dictionary, value, *keys):
         temp[keys[-1]] = value
     else:
         temp[keys[-1]] += value
-        
+
+
 def overwrite_value_to_dict(dictionary, value, *keys):
     temp = dictionary
     for key in keys[:-1]:
@@ -110,8 +115,9 @@ def overwrite_value_to_dict(dictionary, value, *keys):
             temp[key] = {}
         temp = temp[key]
     temp[keys[-1]] = value
-    
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     import json
     a = '{}'
-    print(json.loads(a),type(json.loads(a)))
+    print(json.loads(a), type(json.loads(a)))

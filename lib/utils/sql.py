@@ -99,7 +99,7 @@ class StatisticsActions:
 
         # 关闭会话
         session.close()
-        
+
     def add_or_update_statistics(self, name, period, stat_date, info):
         # 创建会话
         session = Session()
@@ -146,7 +146,7 @@ class StatisticsActions:
         session = Session()
 
         try:
-        # 找到要获取的统计记录
+            # 找到要获取的统计记录
             statistics = session.query(Statistics).filter_by(
                 name=name, period=period, stat_date=stat_date).all()
         finally:

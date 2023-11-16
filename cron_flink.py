@@ -157,7 +157,7 @@ def stat_bag():
             break
         # if ts > 1000*datetime_to_timestamp(datetime(2023,10,27)):
         #     continue
-        # print(datetime.fromtimestamp(ts/1000))
+        print(datetime.fromtimestamp(ts/1000))
         
         one = json.loads(message.value)
         leng += 1

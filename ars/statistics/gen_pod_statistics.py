@@ -115,8 +115,6 @@ class HandleCountFlatMap(FlatMapFunction):
             value_type_info=Types.INT(),
         )
         self.changed_months = context.get_map_state(descriptor6)
-        
-    
 
     def flat_map(self, value):
         def init(start_date, cur_date, state):
@@ -136,21 +134,22 @@ class HandleCountFlatMap(FlatMapFunction):
             start_date_ts = str_to_timestamp(start_date)
             for status in ['success', 'failure']:
                 name = self.tag.replace('status', status)
-                for date in pd.date_range(start_date,cur_date)[:-1]:
+                for date in pd.date_range(start_date, cur_date)[:-1]:
                     try:
-                        day_res = self.statistics_action.get_statistics(name=name,period='daily',stat_date=date)[0].info
+                        day_res = self.statistics_action.get_statistics(
+                            name=name, period='daily', stat_date=date)[0].info
                         if value['label'] in day_res:
-                            inital[f'count_{status}'] += day_res[value['label']]
+                            inital[f'count_{status}'] += day_res[
+                                value['label']]
                     except Exception as e:
                         print(f'{name}, {date}, no data. {e}')
             state.put(start_date_ts, json.dumps(inital))
-                
-        
+
         if not self.month_data.contains(value['monthtime_int']):
-            init(value['monthtime'],value['daytime'],self.month_data)
+            init(value['monthtime'], value['daytime'], self.month_data)
         if not self.week_data.contains(value['weektime_int']):
-            init(value['weektime'],value['daytime'],self.week_data)
-            
+            init(value['weektime'], value['daytime'], self.week_data)
+
         return_dict = {
             'label': value['label'],
             'count_success': value['count_success'],
@@ -164,7 +163,7 @@ class HandleCountFlatMap(FlatMapFunction):
             'monthtime': value['monthtime'],
             'monthtime_int': value['monthtime_int'],
         }
-            
+
         count_json = self.minute_data.get(
             value['minutetime_int'])  # 这个分钟的return_dict累加数据
         max_minute_int = max(self.minute_data.keys(
@@ -195,13 +194,13 @@ class HandleCountFlatMap(FlatMapFunction):
                 self.update_state(value)
         return iter([])
 
-    def stat_pod(self, json_str,period):
+    def stat_pod(self, json_str, period):
         json_mysql = json.loads(json_str)
-        if period=='daily':
+        if period == 'daily':
             stat_date = json_mysql['daytime']
-        elif period=='weekly':
+        elif period == 'weekly':
             stat_date = json_mysql['weektime']
-        elif period=='monthly':
+        elif period == 'monthly':
             stat_date = json_mysql['monthtime']
         for status in ['success', 'failure']:
             name = self.tag.replace('status', status)
@@ -223,11 +222,11 @@ class HandleCountFlatMap(FlatMapFunction):
         minute_json = json.loads(minute_json)
         self.update_state(minute_json)
         for daytime_int_one in self.changed_days.keys():
-            self.stat_pod(self.day_data.get(daytime_int_one),'daily')
+            self.stat_pod(self.day_data.get(daytime_int_one), 'daily')
         for weektime_int_one in self.changed_weeks.keys():
-            self.stat_pod(self.week_data.get(weektime_int_one),'weekly')
+            self.stat_pod(self.week_data.get(weektime_int_one), 'weekly')
         for monthtime_int_one in self.changed_months.keys():
-            self.stat_pod(self.month_data.get(monthtime_int_one),'monthly')
+            self.stat_pod(self.month_data.get(monthtime_int_one), 'monthly')
         self.changed_days.clear()
         self.changed_weeks.clear()
         self.changed_months.clear()

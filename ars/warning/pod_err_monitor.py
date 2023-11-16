@@ -1,66 +1,129 @@
-import logging
 from datetime import datetime, timedelta
-
 from pyflink.datastream import (
     StreamExecutionEnvironment,
-    FlatMapFunction,
     RuntimeContext,
-    ProcessFunction,
     ProcessWindowFunction,
 )
+from pyflink.common import Types as PyTypes
 from pyflink.common.time import Time
-from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
-from pyflink.common.typeinfo import Types
+from pyflink.common.typeinfo import Types as InfoTypes
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
+from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor
-from lib.common.settings import (
-    FLINK_SQL_CONNECTOR_KAFKA_LOC,
-    ARS_HOST,
-    GRM_HOST,
-    ARS_DEV_HOST,
-    ARS_API_ROOT_TOKEN,
-    KAFKA_TOPIC_OF_JOB_MONITOR,
-)
 from pyflink.datastream.window import SlidingProcessingTimeWindows
-from lib.utils.kafka import get_flink_kafka_consumer
-from lib.common.schema import POD_ERR_SCHEMA
+from tenacity import retry
+from tenacity.stop import stop_after_attempt
+from tenacity.wait import wait_exponential
+from typing import Optional, List
 import requests
-from lib.utils.utils import http_request
 
 WINDOW_SIZE = Time.minutes(5)
 WINDOW_SLIDE = Time.seconds(10)
+KAFKA_SERVERS = '10.10.2.224:9092,10.10.2.81:9092,10.10.3.141:9092'
+FLINK_SQL_CONNECTOR_KAFKA_LOC = '/home/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
+KAFKA_TOPIC_OF_JOB_MONITOR = 'ars_prod_job_monitor'
+
+POD_ERR_SCHEMA = {
+    "node_name": PyTypes.STRING(),
+    "job_status": PyTypes.STRING(),
+    "job_name": PyTypes.STRING(),
+    "timestamp": PyTypes.STRING(),
+}
+
+
+# pickle error
+# @retry(
+#     reraise=True,
+#     stop=stop_after_attempt(3),
+#     wait=wait_exponential(multiplier=2, min=1, max=5))
+def http_request(
+        method: str,
+        url: str,
+        data: Optional[dict] = None,
+        json: Optional[dict] = None,
+        params: Optional[dict] = None,
+        headers: Optional[dict] = None,
+        timeout: Optional[float] = None,
+        skip: Optional[List[int]] = None,
+):
+
+    r = requests.request(
+        method=method,
+        url=url,
+        data=data,
+        json=json,
+        params=params,
+        headers=headers,
+        timeout=timeout,
+    )
+    if skip and r.status_code in skip:
+        return r
+    if r.status_code >= 400:
+        print(
+            f"Failed to {method.upper()} -> '{url}', status code: {r.status_code}, error: {r.text}"
+        )
+    r.raise_for_status()
+    print(
+        f"Success {method.upper()} -> '{url}' with status code: {r.status_code}"
+    )
+    return r
+
+
+def get_flink_kafka_consumer(schema, topic, group_id, start_date=None):
+    KEYS = [k for k in schema.keys()]
+    VALUES = [schema[k] for k in KEYS]
+    deserialization_schema = JsonRowDeserializationSchema.Builder() \
+        .type_info(PyTypes.ROW_NAMED(KEYS, VALUES)) \
+        .build()
+    kafka_consumer = FlinkKafkaConsumer(
+        topics=topic,
+        deserialization_schema=deserialization_schema,
+        properties={
+            'bootstrap.servers': KAFKA_SERVERS,
+            'group.id': group_id,
+        })
+    if start_date:
+        date_object = start_date
+        kafka_consumer.set_start_from_timestamp(
+            int(date_object.timestamp()) * 1000)
+    else:
+        kafka_consumer.set_start_from_latest()
+    return kafka_consumer
 
 
 class PodErrMonitor(ProcessWindowFunction):
+    GRM_HOST = 'https://grm.momenta.works'
+    ARS_HOST = 'https://ars.momenta.works'
+    ARS_API_ROOT_TOKEN = '8e4c872d-b688-4900-83b1-b28a8efd4001'
+    mq_message_source = "ars_pod_err_monitor"
+    mq_message_type = "ARSPodErrMonitor"
+    warning_api = ARS_HOST + "/api/v1/notification/warn/"
+    warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
+    warning_assignees = [
+        "ou_0c135f719351847da272c21880f9b96f",
+        "ou_cb867b8fedad86c53850ad776877aba7"
+    ]
+
     def __init__(self, window_size, window_slide):
         self.window_size = window_size
         self.window_slide = window_slide
         self.last_warn_timestamp = None  # in seconds
         self.retried_pods = None  # avoid duplicate retry
         self.cordoned_nodes = None  # avoid duplicate cordon
-
-        self.warning_api = ARS_HOST + "/api/v1/notification/warn/"
-        self.warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
-        self.warning_assignees = [
-            "ou_0c135f719351847da272c21880f9b96f",
-            "ou_cb867b8fedad86c53850ad776877aba7"
-        ]
         self.warning_assignees_str = " ".join(
             [self.assign_someone(user) for user in self.warning_assignees])
-        self.mq_message_source = "ars_pod_err_monitor"
-        self.mq_message_type = "ARSPodErrMonitor"
 
     def open(self, runtime_context: RuntimeContext):
         self.last_warn_timestamp_descriptor = ValueStateDescriptor(
-            "last_warn_timestamp", Types.INT())
+            "last_warn_timestamp", InfoTypes.INT())
         self.last_warn_timestamp = runtime_context.get_state(
             self.last_warn_timestamp_descriptor)
         self.retried_pods_descriptor = MapStateDescriptor(
-            "retried_pods", Types.STRING(), Types.BOOLEAN())
+            "retried_pods", InfoTypes.STRING(), InfoTypes.BOOLEAN())
         self.retried_pods = runtime_context.get_map_state(
             self.retried_pods_descriptor)
         self.cordoned_nodes_descriptor = MapStateDescriptor(
-            "cordoned_nodes", Types.STRING(), Types.BOOLEAN())
+            "cordoned_nodes", InfoTypes.STRING(), InfoTypes.BOOLEAN())
         self.cordoned_nodes = runtime_context.get_map_state(
             self.cordoned_nodes_descriptor)
 
@@ -89,10 +152,10 @@ class PodErrMonitor(ProcessWindowFunction):
                 try:
                     response = http_request(
                         method='PATCH',
-                        url=GRM_HOST + '/api/v1/cluster/node',
+                        url=self.GRM_HOST + '/api/v1/cluster/node',
                         data=body,
                         headers={
-                            'Authorization': 'Token ' + ARS_API_ROOT_TOKEN
+                            'Authorization': 'Token ' + self.ARS_API_ROOT_TOKEN
                         })
                     if response.status_code == 200:
                         self.cordoned_nodes.put(node_name, True)
@@ -107,11 +170,11 @@ class PodErrMonitor(ProcessWindowFunction):
                 try:
                     http_request(
                         method='PUT',
-                        url=ARS_HOST +
-                        '/api/v1/driver/workflow/improve_priority/3',  # TODO: change to ARS_HOST
+                        url=self.ARS_HOST +
+                        '/api/v1/driver/workflow/improve_priority/3',
                         data={'workflow_id__in': workflows},
                         headers={
-                            'Authorization': 'Token ' + ARS_API_ROOT_TOKEN
+                            'Authorization': 'Token ' + self.ARS_API_ROOT_TOKEN
                         })
                 except Exception as e:
                     print(
@@ -134,7 +197,7 @@ class PodErrMonitor(ProcessWindowFunction):
                     self.retried_pods.clear()
                     self.cordoned_nodes.clear()
                 try:
-                    requests.post(url=ARS_HOST+'/api/v1/notification/warn/',json={
+                    requests.post(url=self.ARS_HOST+'/api/v1/notification/warn/',json={
                         "user_id": self.warning_chat_group,
                         "info": f"FAULT! GPU error on machine {node_name} " + \
                                 f"in cluter ddinfra-prod found at " + \
@@ -149,7 +212,8 @@ class PodErrMonitor(ProcessWindowFunction):
                 except Exception as e:
                     print(
                         f"Failed to send warning, node:{node_name}. Err: {e}")
-                self.last_warn_timestamp.update(float(elements[-1].timestamp)/1000)
+                self.last_warn_timestamp.update(
+                    float(elements[-1].timestamp) / 1000)
                 yield 'alert: ' + datetime.strftime(
                     datetime.fromtimestamp(self.last_warn_timestamp.value()),
                     '%Y-%m-%d %H:%M:%S')

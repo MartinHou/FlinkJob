@@ -54,10 +54,3 @@ TEST_ARS_BAG_SCHEMA = {
     'final_attempt': Types.BOOLEAN(),
     'config': Types.STRING(),
 }
-
-POD_ERR_SCHEMA = {
-    "node_name": Types.STRING(),
-    "job_status": Types.STRING(),
-    "job_name": Types.STRING(),
-    "timestamp": Types.STRING(),
-}

@@ -17,7 +17,9 @@ import pandas as pd
 
 class ConsumingFilter(FilterFunction):
     def filter(self, value):
-        return value.type=='replay' and value['output_bag']!='' and 'bag_duration' in json.loads(value['metric'])   # status?
+        return value.type == 'replay' and value[
+            'output_bag'] != '' and 'bag_duration' in json.loads(
+                value['metric'])  # status?
 
 
 class AddConsumingTimeProcess(ProcessFunction):
@@ -143,22 +145,21 @@ class HandleDurationFlatMap(FlatMapFunction):
                 'monthtime_int': value['monthtime_int'],
             }
             start_date_ts = str_to_timestamp(start_date)
-            for date in pd.date_range(start_date,cur_date)[:-1]:
+            for date in pd.date_range(start_date, cur_date)[:-1]:
                 try:
-                    day_res = self.statistics_action.get_statistics(name=self.tag,period='daily',stat_date=date)[0].info
+                    day_res = self.statistics_action.get_statistics(
+                        name=self.tag, period='daily', stat_date=date)[0].info
                     if value['label'] in day_res:
                         inital['duration'] += day_res[value['label']]
                 except Exception as e:
                     print(f'{self.tag}, {date}, no data')
             state.put(start_date_ts, json.dumps(inital))
-                
-        
+
         if not self.month_data.contains(value['monthtime_int']):
-            init(value['monthtime'],value['daytime'],self.month_data)
+            init(value['monthtime'], value['daytime'], self.month_data)
         if not self.week_data.contains(value['weektime_int']):
-            init(value['weektime'],value['daytime'],self.week_data)
-            
-            
+            init(value['weektime'], value['daytime'], self.week_data)
+
         return_dict = {
             'label': value['label'],
             'duration': value['duration'],
@@ -199,13 +200,13 @@ class HandleDurationFlatMap(FlatMapFunction):
                 self.update_state(value)
         return iter([])
 
-    def stat_pod(self, json_str,period):
+    def stat_pod(self, json_str, period):
         json_mysql = json.loads(json_str)
-        if period=='daily':
+        if period == 'daily':
             stat_date = json_mysql['daytime']
-        elif period=='weekly':
+        elif period == 'weekly':
             stat_date = json_mysql['weektime']
-        elif period=='monthly':
+        elif period == 'monthly':
             stat_date = json_mysql['monthtime']
         name = self.tag
         list_get = list(
@@ -226,11 +227,11 @@ class HandleDurationFlatMap(FlatMapFunction):
         minute_json = json.loads(minute_json)
         self.update_state(minute_json)
         for daytime_int_one in self.changed_days.keys():
-            self.stat_pod(self.day_data.get(daytime_int_one),'daily')
+            self.stat_pod(self.day_data.get(daytime_int_one), 'daily')
         for weektime_int_one in self.changed_weeks.keys():
-            self.stat_pod(self.week_data.get(weektime_int_one),'weekly')
+            self.stat_pod(self.week_data.get(weektime_int_one), 'weekly')
         for monthtime_int_one in self.changed_months.keys():
-            self.stat_pod(self.month_data.get(monthtime_int_one),'monthly')
+            self.stat_pod(self.month_data.get(monthtime_int_one), 'monthly')
         self.changed_days.clear()
         self.changed_weeks.clear()
         self.changed_months.clear()
@@ -349,23 +350,26 @@ class HandleErrorFlatMap(FlatMapFunction):
                 'monthtime_int': value['monthtime_int'],
             }
             start_date_ts = str_to_timestamp(start_date)
-            for date in pd.date_range(start_date,cur_date)[:-1]:
+            for date in pd.date_range(start_date, cur_date)[:-1]:
                 try:
-                    day_res = self.statistics_action.get_statistics(name=self.tag,period='daily',stat_date=date)[0].info
-                    if value['group'] in day_res and value['error_stage'] in day_res[value['group']] and value['error_type'] in day_res[value['group']][value['error_stage']]:
-                        inital['duration'] += day_res[value['group']][value['error_stage']][value['error_type']]
+                    day_res = self.statistics_action.get_statistics(
+                        name=self.tag, period='daily', stat_date=date)[0].info
+                    if value['group'] in day_res and value[
+                            'error_stage'] in day_res[value[
+                                'group']] and value['error_type'] in day_res[
+                                    value['group']][value['error_stage']]:
+                        inital['duration'] += day_res[value['group']][
+                            value['error_stage']][value['error_type']]
                 except Exception as e:
                     print(f'{self.tag}, {date}, no data. {e}')
-                    
+
             state.put(start_date_ts, json.dumps(inital))
-                
-        
+
         if not self.month_data.contains(value['monthtime_int']):
-            init(value['monthtime'],value['daytime'],self.month_data)
+            init(value['monthtime'], value['daytime'], self.month_data)
         if not self.week_data.contains(value['weektime_int']):
-            init(value['weektime'],value['daytime'],self.week_data)
-            
-            
+            init(value['weektime'], value['daytime'], self.week_data)
+
         return_dict = {
             'group': value['group'],
             'error_stage': value['error_stage'],
@@ -411,11 +415,11 @@ class HandleErrorFlatMap(FlatMapFunction):
 
     def stat_pod(self, json_str, period):
         json_mysql = json.loads(json_str)
-        if period=='daily':
+        if period == 'daily':
             stat_date = json_mysql['daytime']
-        elif period=='weekly':
+        elif period == 'weekly':
             stat_date = json_mysql['weektime']
-        elif period=='monthly':
+        elif period == 'monthly':
             stat_date = json_mysql['monthtime']
         list_get = list(
             self.statistics_action.get_statistics(
@@ -442,11 +446,11 @@ class HandleErrorFlatMap(FlatMapFunction):
         minute_json = json.loads(minute_json)
         self.update_state(minute_json)
         for daytime_int_one in self.changed_days.keys():
-            self.stat_pod(self.day_data.get(daytime_int_one),'daily')
+            self.stat_pod(self.day_data.get(daytime_int_one), 'daily')
         for weektime_int_one in self.changed_weeks.keys():
-            self.stat_pod(self.week_data.get(weektime_int_one),'weekly')
+            self.stat_pod(self.week_data.get(weektime_int_one), 'weekly')
         for monthtime_int_one in self.changed_months.keys():
-            self.stat_pod(self.month_data.get(monthtime_int_one),'monthly')
+            self.stat_pod(self.month_data.get(monthtime_int_one), 'monthly')
         self.changed_days.clear()
         self.changed_weeks.clear()
         self.changed_months.clear()
