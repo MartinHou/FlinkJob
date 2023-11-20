@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, time
 
-LOG_URL = '/home/martin.hou/flink-jobs/ars/workflow/log'
-FLINK_SQL_CONNECTOR_KAFKA_LOC = '/home/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
+LOG_URL = '/mnt/data/userdata/martin.hou/flink-jobs/ars/workflow/log'
+FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/userdata/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 
 # START_TIME = datetime.combine((datetime.now()-timedelta(days=1)).date(), time(0))
 START_TIME = datetime(2023, 10, 26)
