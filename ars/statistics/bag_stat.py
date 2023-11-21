@@ -17,9 +17,9 @@ class Process(ProcessFunction):
     def process_element(self, value, ctx: ProcessFunction.Context):
         ts = int(ctx.timestamp() / 1000)
         dt = datetime.fromtimestamp(ts)
-        
-        if value.group=='cp':
-            value.group='CP'
+
+        if value.group == 'cp':
+            value.group = 'CP'
 
         mode = None
         config = json.loads(value.config)
@@ -49,21 +49,25 @@ class StatBag(FlatMapFunction):
 
     def open(self, ctx: RuntimeContext):
         self.today_stat_replay_success_bag_duration_group_by_mode = ctx.get_state(
-            ValueStateDescriptor("today_stat_replay_success_bag_duration_group_by_mode",
-                                 Types.STRING()))
+            ValueStateDescriptor(
+                "today_stat_replay_success_bag_duration_group_by_mode",
+                Types.STRING()))
         self.today_stat_replay_success_bag_duration_group_by_category = ctx.get_state(
-            ValueStateDescriptor("today_stat_replay_success_bag_duration_group_by_category",
-                                 Types.STRING()))
+            ValueStateDescriptor(
+                "today_stat_replay_success_bag_duration_group_by_category",
+                Types.STRING()))
         self.today_stat_replay_error_bag_count_group_by_category = ctx.get_state(
             ValueStateDescriptor(
                 "today_stat_replay_error_bag_count_group_by_category",
                 Types.STRING()))
         self.yesterday_stat_replay_success_bag_duration_group_by_mode = ctx.get_state(
-            ValueStateDescriptor("yesterday_stat_replay_success_bag_duration_group_by_mode",
-                                 Types.STRING()))
+            ValueStateDescriptor(
+                "yesterday_stat_replay_success_bag_duration_group_by_mode",
+                Types.STRING()))
         self.yesterday_stat_replay_success_bag_duration_group_by_category = ctx.get_state(
-            ValueStateDescriptor("yesterday_stat_replay_success_bag_duration_group_by_category",
-                                 Types.STRING()))
+            ValueStateDescriptor(
+                "yesterday_stat_replay_success_bag_duration_group_by_category",
+                Types.STRING()))
         self.yesterday_stat_replay_error_bag_count_group_by_category = ctx.get_state(
             ValueStateDescriptor(
                 "yesterday_stat_replay_error_bag_count_group_by_category",
@@ -78,19 +82,24 @@ class StatBag(FlatMapFunction):
     def init(self):
         now_dt = datetime.now()
         self.last_fire.update(
-            datetime_to_str(now_dt))  # prevent writing sql before current dt (disabled in test)
+            datetime_to_str(now_dt)
+        )  # prevent writing sql before current dt (disabled in test)
         # self.last_fire.update(datetime_to_str(datetime.now().replace(hour=0, minute=0, second=0) -
         #     timedelta(days=1))) # TODO: only for test
         today_daydt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_daydt = today_daydt - timedelta(days=1)
         self.yesterday_dt.update(datetime_to_str(yesterday_daydt))
         self.today_dt.update(datetime_to_str(today_daydt))
-        self.today_stat_replay_success_bag_duration_group_by_mode.update(json.dumps({}))
-        self.today_stat_replay_success_bag_duration_group_by_category.update(json.dumps({}))
+        self.today_stat_replay_success_bag_duration_group_by_mode.update(
+            json.dumps({}))
+        self.today_stat_replay_success_bag_duration_group_by_category.update(
+            json.dumps({}))
         self.today_stat_replay_error_bag_count_group_by_category.update(
             json.dumps({}))
-        self.yesterday_stat_replay_success_bag_duration_group_by_mode.update(json.dumps({}))
-        self.yesterday_stat_replay_success_bag_duration_group_by_category.update(json.dumps({}))
+        self.yesterday_stat_replay_success_bag_duration_group_by_mode.update(
+            json.dumps({}))
+        self.yesterday_stat_replay_success_bag_duration_group_by_category.update(
+            json.dumps({}))
         self.yesterday_stat_replay_error_bag_count_group_by_category.update(
             json.dumps({}))
 
@@ -100,13 +109,17 @@ class StatBag(FlatMapFunction):
         # assume that it is impossible that daydt is the day after today_dt
         self.yesterday_stat_replay_success_bag_duration_group_by_mode.update(
             self.today_stat_replay_success_bag_duration_group_by_mode.value())
-        self.today_stat_replay_success_bag_duration_group_by_mode.update(json.dumps({}))
+        self.today_stat_replay_success_bag_duration_group_by_mode.update(
+            json.dumps({}))
         self.yesterday_stat_replay_success_bag_duration_group_by_category.update(
-            self.today_stat_replay_success_bag_duration_group_by_category.value())
-        self.today_stat_replay_success_bag_duration_group_by_category.update(json.dumps({}))
+            self.today_stat_replay_success_bag_duration_group_by_category.
+            value())
+        self.today_stat_replay_success_bag_duration_group_by_category.update(
+            json.dumps({}))
         self.yesterday_stat_replay_error_bag_count_group_by_category.update(
             self.today_stat_replay_error_bag_count_group_by_category.value())
-        self.today_stat_replay_error_bag_count_group_by_category.update(json.dumps({}))
+        self.today_stat_replay_error_bag_count_group_by_category.update(
+            json.dumps({}))
         self.yesterday_dt.update(self.today_dt.value())
         self.today_dt.update(datetime_to_str(daydt))
 
@@ -115,30 +128,38 @@ class StatBag(FlatMapFunction):
             name='stat_replay_success_bag_duration_group_by_mode',
             period='daily',
             stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_replay_success_bag_duration_group_by_mode.value()))
+            info=json.loads(
+                self.today_stat_replay_success_bag_duration_group_by_mode.
+                value()))
         self.statistics_actions.add_or_update_statistics(
             name='stat_replay_success_bag_duration_group_by_mode',
             period='daily',
             stat_date=self.yesterday_dt.value(),
             info=json.loads(
-                self.yesterday_stat_replay_success_bag_duration_group_by_mode.value()))
+                self.yesterday_stat_replay_success_bag_duration_group_by_mode.
+                value()))
         self.statistics_actions.add_or_update_statistics(
             name='stat_replay_success_bag_duration_group_by_category',
             period='daily',
             stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_replay_success_bag_duration_group_by_category.value()))
+            info=json.loads(
+                self.today_stat_replay_success_bag_duration_group_by_category.
+                value()))
         self.statistics_actions.add_or_update_statistics(
             name='stat_replay_success_bag_duration_group_by_category',
             period='daily',
             stat_date=self.yesterday_dt.value(),
             info=json.loads(
-                self.yesterday_stat_replay_success_bag_duration_group_by_category.value()))
+                self.
+                yesterday_stat_replay_success_bag_duration_group_by_category.
+                value()))
         self.statistics_actions.add_or_update_statistics(
             name='stat_replay_error_bag_count_group_by_category',
             period='daily',
             stat_date=self.today_dt.value(),
             info=json.loads(
-                self.today_stat_replay_error_bag_count_group_by_category.value()))
+                self.today_stat_replay_error_bag_count_group_by_category.
+                value()))
         self.statistics_actions.add_or_update_statistics(
             name='stat_replay_error_bag_count_group_by_category',
             period='daily',
@@ -146,35 +167,42 @@ class StatBag(FlatMapFunction):
             info=json.loads(
                 self.yesterday_stat_replay_error_bag_count_group_by_category.
                 value()))
-        
 
     def flat_map(self, value):
         def update(
-                state_stat_replay_success_bag_duration_group_by_mode: ValueState,
-                state_stat_replay_success_bag_duration_group_by_category: ValueState,
+                state_stat_replay_success_bag_duration_group_by_mode:
+                ValueState,
+                state_stat_replay_success_bag_duration_group_by_category:
+                ValueState,
                 state_stat_replay_error_bag_count_group_by_category: ValueState,
         ):
             stat_replay_success_bag_duration_group_by_mode = json.loads(
                 state_stat_replay_success_bag_duration_group_by_mode.value())
             stat_replay_success_bag_duration_group_by_category = json.loads(
-                state_stat_replay_success_bag_duration_group_by_category.value())
+                state_stat_replay_success_bag_duration_group_by_category.
+                value())
             stat_replay_error_bag_count_group_by_category = json.loads(
                 state_stat_replay_error_bag_count_group_by_category.value())
 
-            if output_bag!='' and duration is not None:     # workflow_type=='replay' and is removed for it is for sure
+            if output_bag != '' and duration is not None:  # workflow_type=='replay' and is removed for it is for sure
                 if mode:
-                    add_value_to_dict(stat_replay_success_bag_duration_group_by_mode,duration,mode)
-                add_value_to_dict(stat_replay_success_bag_duration_group_by_category,duration,group)
-            if error_type!='':  # workflow_type == 'replay' and is removed for it is for sure
-                add_value_to_dict(stat_replay_error_bag_count_group_by_category,1,group,error_stage,error_type)
-                
+                    add_value_to_dict(
+                        stat_replay_success_bag_duration_group_by_mode,
+                        duration, mode)
+                add_value_to_dict(
+                    stat_replay_success_bag_duration_group_by_category,
+                    duration, group)
+            if error_type != '':  # workflow_type == 'replay' and is removed for it is for sure
+                add_value_to_dict(
+                    stat_replay_error_bag_count_group_by_category, 1, group,
+                    error_stage, error_type)
+
             state_stat_replay_success_bag_duration_group_by_mode.update(
                 json.dumps(stat_replay_success_bag_duration_group_by_mode))
             state_stat_replay_success_bag_duration_group_by_category.update(
                 json.dumps(stat_replay_success_bag_duration_group_by_category))
             state_stat_replay_error_bag_count_group_by_category.update(
                 json.dumps(stat_replay_error_bag_count_group_by_category))
-            
 
         if not self.today_dt.value():  # init only when restarting server
             self.init()
@@ -192,13 +220,16 @@ class StatBag(FlatMapFunction):
         duration = value['duration']
 
         if daydt_str == self.yesterday_dt.value():
-            update(self.yesterday_stat_replay_success_bag_duration_group_by_mode,
-                   self.yesterday_stat_replay_success_bag_duration_group_by_category,
-                   self.yesterday_stat_replay_error_bag_count_group_by_category)
+            update(
+                self.yesterday_stat_replay_success_bag_duration_group_by_mode,
+                self.
+                yesterday_stat_replay_success_bag_duration_group_by_category,
+                self.yesterday_stat_replay_error_bag_count_group_by_category)
         elif daydt_str == self.today_dt.value():
-            update(self.today_stat_replay_success_bag_duration_group_by_mode,
-                   self.today_stat_replay_success_bag_duration_group_by_category,
-                   self.today_stat_replay_error_bag_count_group_by_category)
+            update(
+                self.today_stat_replay_success_bag_duration_group_by_mode,
+                self.today_stat_replay_success_bag_duration_group_by_category,
+                self.today_stat_replay_error_bag_count_group_by_category)
         else:  # expired data
             return iter([])
 
@@ -232,4 +263,4 @@ if __name__ == "__main__":
     env.set_parallelism(8)
     env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
-    env.execute("stat_pod")
+    env.execute("stat_bag")

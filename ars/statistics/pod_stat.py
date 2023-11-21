@@ -12,6 +12,7 @@ from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 from lib.utils.kafka import get_flink_kafka_consumer
 from lib.utils.utils import add_value_to_dict, merge_dicts
 
+
 class Map(MapFunction):
     def map(self, value):
         dt = str_to_datetime(value['update_time'])
@@ -31,8 +32,8 @@ class Map(MapFunction):
         metric = json.loads(value.metric)
         if 'bags_profile_summary' in metric:
             bags_profile_summary = metric['bags_profile_summary']
-            
-        if value.category=='cp':
+
+        if value.category == 'cp':
             value.category = 'CP'
 
         return {
@@ -128,7 +129,8 @@ class StatPod(FlatMapFunction):
     def init(self):
         now_dt = datetime.now()
         self.last_fire.update(
-            datetime_to_str(now_dt))  # prevent writing sql before current dt (disabled in test)
+            datetime_to_str(now_dt)
+        )  # prevent writing sql before current dt (disabled in test)
         # self.last_fire.update(datetime_to_str(datetime.now().replace(hour=0, minute=0, second=0) -
         #     timedelta(days=1))) # TODO: only for test
         today_daydt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
