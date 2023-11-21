@@ -5,7 +5,7 @@ from collections import defaultdict
 from beautifultable import BeautifulTable
 
 prod_sql = """
-SELECT name,info FROM statistics
+SELECT name,info FROM statistics1
 where name not like 'REALTIME%%' and stat_date >= '2023-11-20' and stat_date < '2023-11-21' and period="daily";
 """
 local_sql = """
@@ -13,7 +13,7 @@ SELECT name,info FROM statistics
 where stat_date >= '2023-11-20' and stat_date < '2023-11-21' and period="daily";
 """
 
-prod_engine = get_engine('./etc/prod_mysql.conf')
+prod_engine = get_engine('./etc/local_mysql.conf')
 local_engine = get_engine('./etc/local_mysql.conf')
 
 
