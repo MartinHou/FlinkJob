@@ -4,13 +4,12 @@ from pyflink.common import (
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, MapFunction)
 from pyflink.datastream.state import ValueStateDescriptor, ValueState
-from lib.utils.sql import StatisticsActions
 from lib.common.settings import *
 from datetime import datetime, timedelta
 from lib.utils.dates import *
 from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 from lib.utils.kafka import get_flink_kafka_consumer
-from lib.utils.utils import add_value_to_dict, merge_dicts
+from lib.utils.utils import add_value_to_dict, merge_dicts, http_request
 
 
 class Map(MapFunction):
@@ -53,9 +52,6 @@ class Map(MapFunction):
 
 
 class StatPod(FlatMapFunction):
-    def __init__(self):
-        self.statistics_actions = StatisticsActions()
-
     def open(self, ctx: RuntimeContext):
         self.today_stat_success_pod_group_by_type = ctx.get_state(
             ValueStateDescriptor("today_stat_success_pod_group_by_type",
@@ -202,114 +198,189 @@ class StatPod(FlatMapFunction):
         self.today_dt.update(datetime_to_str(daydt))
 
     def write_sql(self):
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_success_pod_group_by_type',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_success_pod_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_success_pod_group_by_type',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_success_pod_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_failure_pod_group_by_type',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_failure_pod_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_failure_pod_group_by_type',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_failure_pod_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_success_bag_group_by_category',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(
-                self.today_stat_replay_success_bag_group_by_category.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_success_bag_group_by_category',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_replay_success_bag_group_by_category.
-                value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_failure_bag_group_by_category',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(
-                self.today_stat_replay_failure_bag_group_by_category.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_failure_bag_group_by_category',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_replay_failure_bag_group_by_category.
-                value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_success_bag_group_by_mode',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(
-                self.today_stat_replay_success_bag_group_by_mode.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_success_bag_group_by_mode',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_replay_success_bag_group_by_mode.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_failure_bag_group_by_mode',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(
-                self.today_stat_replay_failure_bag_group_by_mode.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_failure_bag_group_by_mode',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_replay_failure_bag_group_by_mode.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_success_bag_group_by_type',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_success_bag_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_success_bag_group_by_type',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_success_bag_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_failure_bag_group_by_type',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(self.today_stat_failure_bag_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_failure_bag_group_by_type',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_failure_bag_group_by_type.value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_time_consuming_group_by_category',
-            period='daily',
-            stat_date=self.today_dt.value(),
-            info=json.loads(
-                self.today_stat_replay_time_consuming_group_by_category.
-                value()))
-        self.statistics_actions.add_or_update_statistics(
-            name='stat_replay_time_consuming_group_by_category',
-            period='daily',
-            stat_date=self.yesterday_dt.value(),
-            info=json.loads(
-                self.yesterday_stat_replay_time_consuming_group_by_category.
-                value()))
+        http_request(
+            method='POST',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_success_pod_group_by_type',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_success_pod_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_success_pod_group_by_type',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_success_pod_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_failure_pod_group_by_type',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_failure_pod_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_failure_pod_group_by_type',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_failure_pod_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_success_bag_group_by_category',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_replay_success_bag_group_by_category.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_success_bag_group_by_category',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_replay_success_bag_group_by_category.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_failure_bag_group_by_category',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_replay_failure_bag_group_by_category.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_failure_bag_group_by_category',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_replay_failure_bag_group_by_category.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_success_bag_group_by_mode',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_replay_success_bag_group_by_mode.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_success_bag_group_by_mode',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_replay_success_bag_group_by_mode.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_failure_bag_group_by_mode',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_replay_failure_bag_group_by_mode.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_failure_bag_group_by_mode',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_replay_failure_bag_group_by_mode.
+                value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_success_bag_group_by_type',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_success_bag_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+            '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_success_bag_group_by_type',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_success_bag_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+                '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_failure_bag_group_by_type',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_failure_bag_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+                '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_failure_bag_group_by_type',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_failure_bag_group_by_type.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+                '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_time_consuming_group_by_category',
+                period='daily',
+                stat_date=self.today_dt.value(),
+                info=self.today_stat_replay_time_consuming_group_by_category.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        http_request(
+            method='POST',
+            url=ARS_HOST +
+                '/api/v1/driver/statistics/add_or_update',
+            json=dict(
+                name='stat_replay_time_consuming_group_by_category',
+                period='daily',
+                stat_date=self.yesterday_dt.value(),
+                info=self.yesterday_stat_replay_time_consuming_group_by_category.value()),
+            headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
+        
 
     def flat_map(self, value):
         def update(
