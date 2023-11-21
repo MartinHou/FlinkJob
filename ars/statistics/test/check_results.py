@@ -6,11 +6,11 @@ from beautifultable import BeautifulTable
 
 prod_sql = """
 SELECT name,info FROM statistics
-where name not like 'REALTIME%%' and stat_date = '2023-11-20 00:00:00' and period="daily";
+where name not like 'REALTIME%%' and stat_date >= '2023-11-20' and stat_date < '2023-11-22' and period="daily";
 """
 local_sql = """
 SELECT name,info FROM statistics
-where stat_date = '2023-11-20 00:00:00' and period="daily";
+where stat_date >= '2023-11-20' and stat_date < '2023-11-22' and period="daily";
 """
 
 prod_engine = get_engine('./etc/prod_mysql.conf')
