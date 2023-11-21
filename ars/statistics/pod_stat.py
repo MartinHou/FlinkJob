@@ -1,20 +1,16 @@
-import logging
 import json
 from pyflink.common import (
     Types, )
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
-                                RuntimeContext, FilterFunction, MapFunction)
-from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor, ValueState, MapState
+                                RuntimeContext, MapFunction)
+from pyflink.datastream.state import ValueStateDescriptor, ValueState
 from lib.utils.sql import StatisticsActions
 from lib.common.settings import *
 from datetime import datetime, timedelta
 from lib.utils.dates import *
 from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
 from lib.utils.kafka import get_flink_kafka_consumer
-from lib.utils.utils import defaultdict2dict, add_value_to_dict, overwrite_value_to_dict, merge_dicts
-from dateutil.relativedelta import relativedelta
-import pandas as pd
-
+from lib.utils.utils import add_value_to_dict, merge_dicts
 
 class Map(MapFunction):
     def map(self, value):
@@ -35,6 +31,9 @@ class Map(MapFunction):
         metric = json.loads(value.metric)
         if 'bags_profile_summary' in metric:
             bags_profile_summary = metric['bags_profile_summary']
+            
+        if value.category=='cp':
+            value.category = 'CP'
 
         return {
             'datetime': dt,
@@ -129,7 +128,9 @@ class StatPod(FlatMapFunction):
     def init(self):
         now_dt = datetime.now()
         self.last_fire.update(
-            datetime_to_str(now_dt))  # prevent writing sql before current dt
+            datetime_to_str(now_dt))  # prevent writing sql before current dt (disabled in test)
+        # self.last_fire.update(datetime_to_str(datetime.now().replace(hour=0, minute=0, second=0) -
+        #     timedelta(days=1))) # TODO: only for test
         today_daydt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_daydt = today_daydt - timedelta(days=1)
         self.yesterday_dt.update(datetime_to_str(yesterday_daydt))
@@ -451,7 +452,7 @@ class StatPod(FlatMapFunction):
             return iter([])
 
         last_fire = str_to_datetime(self.last_fire.value())
-        if dt - last_fire < timedelta(seconds=20):
+        if dt - last_fire > timedelta(seconds=20):
             self.last_fire.update(datetime_to_str(dt))
             self.write_sql()
 
@@ -476,7 +477,7 @@ def analyse(env: StreamExecutionEnvironment):
 
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
-    env.set_parallelism(1)
+    env.set_parallelism(8)
     env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
     env.execute("stat_pod")
