@@ -206,174 +206,174 @@ class StatPod(FlatMapFunction):
     def write_sql(self):
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_success_pod_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_success_pod_group_by_type.value()),
+                info=json.loads(self.today_stat_success_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_success_pod_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_success_pod_group_by_type.value()),
+                info=json.loads(self.yesterday_stat_success_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_failure_pod_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_failure_pod_group_by_type.value()),
+                info=json.loads(self.today_stat_failure_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_failure_pod_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_failure_pod_group_by_type.value()),
+                info=json.loads(self.yesterday_stat_failure_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_success_bag_group_by_category.
-                value()),
+                info=json.loads(self.today_stat_replay_success_bag_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_success_bag_group_by_category.
-                value()),
+                info=json.loads(self.yesterday_stat_replay_success_bag_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_failure_bag_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_failure_bag_group_by_category.
-                value()),
+                info=json.loads(self.today_stat_replay_failure_bag_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_failure_bag_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_failure_bag_group_by_category.
-                value()),
+                info=json.loads(self.yesterday_stat_replay_failure_bag_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_success_bag_group_by_mode.value()),
+                info=json.loads(self.today_stat_replay_success_bag_group_by_mode.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_success_bag_group_by_mode.
-                value()),
+                info=json.loads(self.yesterday_stat_replay_success_bag_group_by_mode.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_failure_bag_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_failure_bag_group_by_mode.value()),
+                info=json.loads(self.today_stat_replay_failure_bag_group_by_mode.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_failure_bag_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_failure_bag_group_by_mode.
-                value()),
+                info=json.loads(self.yesterday_stat_replay_failure_bag_group_by_mode.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_success_bag_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_success_bag_group_by_type.value()),
+                info=json.loads(self.today_stat_success_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_success_bag_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_success_bag_group_by_type.value()),
+                info=json.loads(self.yesterday_stat_success_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_failure_bag_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_failure_bag_group_by_type.value()),
+                info=json.loads(self.today_stat_failure_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_failure_bag_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_failure_bag_group_by_type.value()),
+                info=json.loads(self.yesterday_stat_failure_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_time_consuming_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_time_consuming_group_by_category.
-                value()),
+                info=json.loads(self.today_stat_replay_time_consuming_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_time_consuming_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.
+                info=json.loads(self.
                 yesterday_stat_replay_time_consuming_group_by_category.
-                value()),
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
 
     def flat_map(self, value):
@@ -539,7 +539,7 @@ def analyse(env: StreamExecutionEnvironment):
     stream.map(Map())\
         .key_by(lambda x: 'dont_care')\
         .flat_map(StatPod())\
-        .print()
+        # .print()
 
 
 if __name__ == "__main__":

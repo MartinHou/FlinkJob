@@ -130,67 +130,67 @@ class StatBag(FlatMapFunction):
     def write_sql(self):
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_success_bag_duration_group_by_mode.
-                value()),
+                info=json.loads(self.today_stat_replay_success_bag_duration_group_by_mode.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.
+                info=json.loads(self.
                 yesterday_stat_replay_success_bag_duration_group_by_mode.
-                value()),
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.
+                info=json.loads(self.
                 today_stat_replay_success_bag_duration_group_by_category.
-                value()),
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.
+                info=json.loads(self.
                 yesterday_stat_replay_success_bag_duration_group_by_category.
-                value()),
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_error_bag_count_group_by_category.
-                value()),
+                info=json.loads(self.today_stat_replay_error_bag_count_group_by_category.
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics',
             json=dict(
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.
+                info=json.loads(self.
                 yesterday_stat_replay_error_bag_count_group_by_category.
-                value()),
+                value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
 
     def flat_map(self, value):
@@ -280,7 +280,7 @@ def analyse(env: StreamExecutionEnvironment):
         .process(Process())\
         .key_by(lambda x: 'dont_care')\
         .flat_map(StatBag())\
-        .print()
+        # .print()
 
 
 if __name__ == "__main__":
