@@ -11,6 +11,7 @@ from lib.common.schema import TEST_ARS_BAG_SCHEMA
 from lib.utils.kafka import get_flink_kafka_consumer
 from lib.utils.utils import add_value_to_dict, http_request
 
+
 class Process(ProcessFunction):
     def process_element(self, value, ctx: ProcessFunction.Context):
         ts = int(ctx.timestamp() / 1000)
@@ -118,69 +119,71 @@ class StatBag(FlatMapFunction):
         self.yesterday_dt.update(self.today_dt.value())
         self.today_dt.update(datetime_to_str(daydt))
 
-    def write_sql(self):        
+    def write_sql(self):
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_success_bag_duration_group_by_mode.value()),
+                info=self.today_stat_replay_success_bag_duration_group_by_mode.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_success_bag_duration_group_by_mode.value()),
+                info=self.
+                yesterday_stat_replay_success_bag_duration_group_by_mode.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_success_bag_duration_group_by_category.value()),
+                info=self.
+                today_stat_replay_success_bag_duration_group_by_category.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_success_bag_duration_group_by_category.value()),
+                info=self.
+                yesterday_stat_replay_success_bag_duration_group_by_category.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=self.today_stat_replay_error_bag_count_group_by_category.value()),
+                info=self.today_stat_replay_error_bag_count_group_by_category.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
-            url=ARS_HOST +
-                '/api/v1/driver/statistics/add_or_update',
+            url=ARS_HOST + '/api/v1/driver/statistics/add_or_update',
             json=dict(
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=self.yesterday_stat_replay_error_bag_count_group_by_category.value()),
+                info=self.
+                yesterday_stat_replay_error_bag_count_group_by_category.
+                value()),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
-        
-        
 
     def flat_map(self, value):
         def update(
