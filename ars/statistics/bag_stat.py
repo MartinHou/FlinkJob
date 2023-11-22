@@ -1,6 +1,5 @@
 import json
-from pyflink.common import (
-    Types, )
+from pyflink.common import Types
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, ProcessFunction)
 from pyflink.datastream.state import ValueStateDescriptor, ValueState
