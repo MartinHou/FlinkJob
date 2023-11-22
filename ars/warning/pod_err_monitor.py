@@ -11,11 +11,12 @@ from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer
 from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor
 from pyflink.datastream.window import SlidingProcessingTimeWindows
-from tenacity import retry
-from tenacity.stop import stop_after_attempt
-from tenacity.wait import wait_exponential
 from typing import Optional, List
 import requests
+
+"""
+This job does not depend on outside files to avoid bugs, though redundant.
+"""
 
 WINDOW_SIZE = Time.minutes(5)
 WINDOW_SLIDE = Time.seconds(10)
@@ -31,11 +32,6 @@ POD_ERR_SCHEMA = {
 }
 
 
-# pickle error
-# @retry(
-#     reraise=True,
-#     stop=stop_after_attempt(3),
-#     wait=wait_exponential(multiplier=2, min=1, max=5))
 def http_request(
         method: str,
         url: str,
@@ -98,10 +94,10 @@ class PodErrMonitor(ProcessWindowFunction):
     mq_message_source = "ars_pod_err_monitor"
     mq_message_type = "ARSPodErrMonitor"
     warning_api = ARS_HOST + "/api/v1/notification/warn/"
-    warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"
+    warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"  # [ SRE & ARS ] ARS 生产集群讨论群
     warning_assignees = [
-        "ou_0c135f719351847da272c21880f9b96f",
-        "ou_cb867b8fedad86c53850ad776877aba7"
+        "ou_0c135f719351847da272c21880f9b96f",  # peter.huang
+        "ou_cb867b8fedad86c53850ad776877aba7"   # hanwen.qiu
     ]
 
     def __init__(self, window_size, window_slide):

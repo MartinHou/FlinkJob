@@ -1,16 +1,22 @@
-from lib.utils.db import get_engine
+from lib.db import get_engine
 import pandas as pd
 import json
 from collections import defaultdict
 from beautifultable import BeautifulTable
 
-prod_sql = """
-SELECT name,info FROM statistics
-where name not like 'REALTIME%%' and stat_date >= '2023-11-20' and stat_date < '2023-11-21' and period="daily";
 """
-local_sql = """
+Compare statistics between prod and local
+"""
+
+START,END = '2023-11-20', '2023-11-21'
+
+prod_sql = f"""
 SELECT name,info FROM statistics
-where stat_date >= '2023-11-20' and stat_date < '2023-11-21' and period="daily";
+where name not like 'REALTIME%' and stat_date >= '{START}' and stat_date < '{END}' and period="daily";
+"""
+local_sql = f"""
+SELECT name,info FROM statistics
+where stat_date >= '{START}' and stat_date < '{END}' and period="daily";
 """
 
 prod_engine = get_engine('./etc/prod_mysql.conf')
@@ -25,7 +31,6 @@ def get_cnt(engine, sql):
                 "info": str
             })
     res = defaultdict(lambda: defaultdict(float))
-    consuming = dict()
     for _, row in prod_doc.iterrows():
         info = json.loads(row['info'])
         if row['name'] == 'stat_replay_error_bag_count_group_by_category':

@@ -4,8 +4,5 @@ codes of flink jobs.
 # Getting Started
 check setup/setup.sh
 
-# Build and Test
-TODO
-
-# Contribute
-TODO
+# Run
+sh submit_jobs.sh

@@ -4,12 +4,12 @@ from pyflink.common import (
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, MapFunction)
 from pyflink.datastream.state import ValueStateDescriptor, ValueState
-from lib.common.settings import *
+from configs import *
 from datetime import datetime, timedelta
-from lib.utils.dates import *
-from lib.common.schema import TEST_ARS_WORKFLOW_SCHEMA
-from lib.utils.kafka import get_flink_kafka_consumer
-from lib.utils.utils import add_value_to_dict, merge_dicts, http_request
+from lib.dates import *
+from lib.schema import TEST_ARS_WORKFLOW_SCHEMA
+from lib.kafka import get_flink_kafka_consumer
+from lib.utils import add_value_to_dict, merge_dicts, http_request
 
 
 class Map(MapFunction):
@@ -128,7 +128,7 @@ class StatPod(FlatMapFunction):
             datetime_to_str(now_dt)
         )  # prevent writing sql before current dt (disabled in test)
         # self.last_fire.update(datetime_to_str(datetime.now().replace(hour=0, minute=0, second=0) -
-        #     timedelta(days=1))) # TODO: only for test
+        #     timedelta(days=1))) # only for test
         today_daydt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_daydt = today_daydt - timedelta(days=1)
         self.yesterday_dt.update(datetime_to_str(yesterday_daydt))

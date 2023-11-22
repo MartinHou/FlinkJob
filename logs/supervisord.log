@@ -1,7 +1,0 @@
-2023-10-27 17:35:12,843 INFO daemonizing the supervisord process
-2023-10-27 17:35:12,844 INFO supervisord started with pid 3091074
-2023-10-27 17:35:13,846 INFO spawned: 'cron_0' with pid 3091104
-2023-10-27 17:35:14,847 INFO success: cron_0 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
-2023-10-27 17:35:50,886 WARN received SIGTERM indicating exit request
-2023-10-27 17:35:50,886 INFO waiting for cron_0 to die
-2023-10-27 17:35:50,888 INFO stopped: cron_0 (terminated by SIGTERM)
