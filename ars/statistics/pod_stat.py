@@ -129,6 +129,10 @@ class StatPod(FlatMapFunction):
             ValueStateDescriptor("last_fire", Types.STRING()))
 
     def init(self):
+        """
+        1. initialize variables
+        2. determine date
+        """
         now_dt = datetime.now()
         self.last_fire.update(
             datetime_to_str(now_dt)
@@ -167,6 +171,9 @@ class StatPod(FlatMapFunction):
             json.dumps({}))
 
     def check_expire(self, daydt: datetime):
+        """
+        If it enters a new day, move today's data to yesterday's and clear today's data.
+        """
         if daydt <= str_to_datetime(self.today_dt.value()):
             return
         # assume that it is impossible that daydt is the day after today_dt
@@ -204,6 +211,9 @@ class StatPod(FlatMapFunction):
         self.today_dt.update(datetime_to_str(daydt))
 
     def write_sql(self):
+        """
+        Write data to MySQL statistics table.
+        """
         http_request(
             method='POST',
             url=ARS_HOST + '/api/v1/driver/statistics',
@@ -388,6 +398,10 @@ class StatPod(FlatMapFunction):
                 state_stat_failure_bag_group_by_type: ValueState,
                 state_stat_replay_time_consuming_group_by_category: ValueState
         ):
+            """
+            Update all states in this day.
+            This is the core algorithm of this job.
+            """
             stat_success_pod_group_by_type = json.loads(
                 state_stat_success_pod_group_by_type.value())
             stat_failure_pod_group_by_type = json.loads(

@@ -108,6 +108,9 @@ class StatBag(FlatMapFunction):
             json.dumps({}))
 
     def check_expire(self, daydt: datetime):
+        """
+        If it enters a new day, move today's data to yesterday's and clear today's data.
+        """
         if daydt <= str_to_datetime(self.today_dt.value()):
             return
         # assume that it is impossible that daydt is the day after today_dt
@@ -128,6 +131,9 @@ class StatBag(FlatMapFunction):
         self.today_dt.update(datetime_to_str(daydt))
 
     def write_sql(self):
+        """
+        Write data to MySQL statistics table.
+        """
         http_request(
             method='POST',
             url=ARS_HOST + '/api/v1/driver/statistics',
@@ -201,6 +207,10 @@ class StatBag(FlatMapFunction):
                 ValueState,
                 state_stat_replay_error_bag_count_group_by_category: ValueState,
         ):
+            """
+            Update all states in this day.
+            This is the core algorithm of this job.
+            """
             stat_replay_success_bag_duration_group_by_mode = json.loads(
                 state_stat_replay_success_bag_duration_group_by_mode.value())
             stat_replay_success_bag_duration_group_by_category = json.loads(
