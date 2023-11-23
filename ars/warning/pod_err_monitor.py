@@ -21,7 +21,7 @@ This job does not depend on outside files to avoid bugs, though redundant.
 WINDOW_SIZE = Time.minutes(5)
 WINDOW_SLIDE = Time.seconds(10)
 KAFKA_SERVERS = '10.10.2.224:9092,10.10.2.81:9092,10.10.3.141:9092'
-FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/userdata/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
+# FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/userdata/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 KAFKA_TOPIC_OF_JOB_MONITOR = 'ars_prod_job_monitor'
 
 POD_ERR_SCHEMA = {
@@ -238,7 +238,7 @@ def monitor(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
-    env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
+    # env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
 
     monitor(env)
 

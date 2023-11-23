@@ -1,4 +1,4 @@
-FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/userdata/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
+# FLINK_SQL_CONNECTOR_KAFKA_LOC = '/mnt/data/userdata/martin.hou/flink-sql-connector-kafka-1.15.4.jar'
 
 KAFKA_SERVERS = '10.10.2.224:9092,10.10.2.81:9092,10.10.3.141:9092'
 KAFKA_TOPIC_OF_ARS_WORKFLOW = 'ars_prod_pod_result'

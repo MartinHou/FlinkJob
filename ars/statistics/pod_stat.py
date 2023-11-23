@@ -5,7 +5,7 @@ from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
 from pyflink.datastream.state import ValueStateDescriptor, ValueState
 from configs import (
     KAFKA_TOPIC_OF_ARS_WORKFLOW,
-    FLINK_SQL_CONNECTOR_KAFKA_LOC,
+    # FLINK_SQL_CONNECTOR_KAFKA_LOC,
     ARS_HOST,
     ARS_API_ROOT_TOKEN
 )
@@ -559,6 +559,6 @@ def analyse(env: StreamExecutionEnvironment):
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(8)
-    env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
+    # env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
     env.execute("stat_pod")
