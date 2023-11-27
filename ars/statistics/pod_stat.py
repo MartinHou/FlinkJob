@@ -2,7 +2,7 @@ import json
 from pyflink.common import Types
 from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, MapFunction)
-from pyflink.datastream.state import ValueStateDescriptor, ValueState
+from pyflink.datastream.state import ValueStateDescriptor, ValueState, MapStateDescriptor, MapState
 from configs import (
     KAFKA_TOPIC_OF_ARS_WORKFLOW,
     # FLINK_SQL_CONNECTOR_KAFKA_LOC,
@@ -121,6 +121,10 @@ class StatPod(FlatMapFunction):
             ValueStateDescriptor(
                 "yesterday_stat_replay_time_consuming_group_by_category",
                 Types.STRING()))
+        self.today_success_pods = ctx.get_state(
+            MapStateDescriptor("today_success_pods", Types.STRING(), Types.STRING()))
+        self.today_failure_pods = ctx.get_state(
+            MapStateDescriptor("today_failure_pods", Types.STRING(), Types.STRING()))
         self.yesterday_dt = ctx.get_state(
             ValueStateDescriptor("yesterday_dt", Types.STRING()))
         self.today_dt = ctx.get_state(
@@ -169,6 +173,8 @@ class StatPod(FlatMapFunction):
         self.yesterday_stat_failure_bag_group_by_type.update(json.dumps({}))
         self.yesterday_stat_replay_time_consuming_group_by_category.update(
             json.dumps({}))
+        self.today_success_pods.update(json.dumps({}))
+        self.today_failure_pods.update(json.dumps({}))
 
     def check_expire(self, daydt: datetime):
         """
@@ -207,6 +213,8 @@ class StatPod(FlatMapFunction):
             self.today_stat_replay_time_consuming_group_by_category.value())
         self.today_stat_replay_time_consuming_group_by_category.update(
             json.dumps({}))
+        self.today_failure_pods.update(json.dumps({}))
+        self.today_success_pods.update(json.dumps({}))
         self.yesterday_dt.update(self.today_dt.value())
         self.today_dt.update(datetime_to_str(daydt))
 
@@ -396,7 +404,8 @@ class StatPod(FlatMapFunction):
                 state_stat_replay_failure_bag_group_by_mode: ValueState,
                 state_stat_success_bag_group_by_type: ValueState,
                 state_stat_failure_bag_group_by_type: ValueState,
-                state_stat_replay_time_consuming_group_by_category: ValueState
+                state_stat_replay_time_consuming_group_by_category: ValueState,
+                is_today=False  # rule out duplicate pods in today's pod err rate only
         ):
             """
             Update all states in this day.
@@ -420,10 +429,20 @@ class StatPod(FlatMapFunction):
                 state_stat_failure_bag_group_by_type.value())
             stat_replay_time_consuming_group_by_category = json.loads(
                 state_stat_replay_time_consuming_group_by_category.value())
+            if is_today:
+                today_failure_pods = json.loads(self.today_failure_pods.value())
+                today_success_pods = json.loads(self.today_success_pods.value())
 
             if workflow_status == 'SUCCESS':
                 add_value_to_dict(stat_success_pod_group_by_type, 1,
                                   workflow_type)
+                if is_today:
+                    if workflow_id in today_failure_pods:
+                        add_value_to_dict(stat_failure_pod_group_by_type, -1, today_failure_pods[workflow_id])
+                        del today_failure_pods[workflow_id]
+                    elif workflow_id in today_success_pods:
+                        return
+                    today_success_pods[workflow_id] = category
                 succ, fail = 0, 0
                 for bag in bag_replay_list:
                     if bag:
@@ -452,6 +471,13 @@ class StatPod(FlatMapFunction):
                                           workflow_type)
 
             elif workflow_status == 'FAILURE':
+                if is_today:
+                    if workflow_id in today_success_pods:
+                        add_value_to_dict(stat_success_pod_group_by_type, -1, today_success_pods[workflow_id])
+                        del today_success_pods[workflow_id]
+                    elif workflow_id in today_failure_pods:
+                        return
+                    today_failure_pods[workflow_id] = category
                 add_value_to_dict(stat_failure_pod_group_by_type, 1,
                                   workflow_type)
                 add_value_to_dict(stat_replay_failure_bag_group_by_category,
@@ -489,6 +515,9 @@ class StatPod(FlatMapFunction):
                 json.dumps(stat_failure_bag_group_by_type))
             state_stat_replay_time_consuming_group_by_category.update(
                 json.dumps(stat_replay_time_consuming_group_by_category))
+            if is_today:
+                self.today_failure_pods.update(json.dumps(today_failure_pods))
+                self.today_success_pods.update(json.dumps(today_success_pods))
 
         if not self.today_dt.value():  # init only when restarting server
             self.init()
@@ -528,7 +557,8 @@ class StatPod(FlatMapFunction):
                    self.today_stat_replay_failure_bag_group_by_mode,
                    self.today_stat_success_bag_group_by_type,
                    self.today_stat_failure_bag_group_by_type,
-                   self.today_stat_replay_time_consuming_group_by_category)
+                   self.today_stat_replay_time_consuming_group_by_category,
+                   is_today=True)
         else:  # expired data
             return iter([])
 
