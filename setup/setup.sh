@@ -6,4 +6,4 @@ wget https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-k
 
 
 # setup pyflink local
-# pip install apache-flink kafka-python
+# pip install apache-flink kafka-python sqlalchemy==1.4.39 yapf==0.25.0
