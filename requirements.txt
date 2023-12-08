@@ -1,5 +1,5 @@
 apache-flink
 kafka-python
-sqlalchemy==1.4.39 
+# sqlalchemy==1.4.39 
 # yapf==0.25.0
 # beautifultable
