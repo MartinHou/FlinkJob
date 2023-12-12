@@ -26,7 +26,7 @@ class Map(MapFunction):
         workflow_input = json.loads(value.workflow_input)
         if 'extra_args' in workflow_input and 'mode' in workflow_input[
                 'extra_args']:
-            mode = workflow_input['extra_args']['mode']
+            mode = workflow_input['extra_args']['mode'].upper()
 
         bag_replay_list = []
         workflow_output = json.loads(value.workflow_output)
@@ -38,9 +38,6 @@ class Map(MapFunction):
         if 'bags_profile_summary' in metric:
             bags_profile_summary = metric['bags_profile_summary']
 
-        if value.category == 'cp':
-            value.category = 'CP'
-
         return {
             'datetime': dt,
             'daydt': dt_to_dayobj(dt),
@@ -51,7 +48,6 @@ class Map(MapFunction):
             'workflow_status': value.workflow_status,
             'device': value.device,
             'mode': mode,
-            'category': value.category,
             'bag_replay_list': bag_replay_list,
             'bags_profile_summary': bags_profile_summary,
         }
