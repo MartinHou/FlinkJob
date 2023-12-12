@@ -43,7 +43,9 @@ def run():
             'password' = 'DDInfraARS123',
             'database-name' = 'ars_prod',
             'table-name' = 'workflow',
-            'scan.incremental.snapshot.chunk.size' = '512'
+            'scan.incremental.snapshot.chunk.size' = '512',
+            'scan.snapshot.fetch.size' = '512',
+            'scan.startup.mode' = 'earliest-offset'
         );
     """)
     
