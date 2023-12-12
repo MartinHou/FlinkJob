@@ -445,22 +445,24 @@ class StatPod(FlatMapFunction):
                     else:
                         fail += 1
                 if succ:
-                    add_value_to_dict(
-                        stat_replay_success_bag_group_by_category, succ,
-                        category)
-                    if mode is not None:
+                    if workflow_type == 'replay':
                         add_value_to_dict(
-                            stat_replay_success_bag_group_by_mode, succ, mode)
+                            stat_replay_success_bag_group_by_category, succ,
+                            category)
+                        if mode is not None:
+                            add_value_to_dict(
+                                stat_replay_success_bag_group_by_mode, succ, mode)
                     if workflow_type != 'probe_detect':
                         add_value_to_dict(stat_success_bag_group_by_type, succ,
                                           workflow_type)
                 if fail:
-                    add_value_to_dict(
-                        stat_replay_failure_bag_group_by_category, fail,
-                        category)
-                    if mode is not None:
+                    if workflow_type == 'replay':
                         add_value_to_dict(
-                            stat_replay_failure_bag_group_by_mode, fail, mode)
+                            stat_replay_failure_bag_group_by_category, fail,
+                            category)
+                        if mode is not None:
+                            add_value_to_dict(
+                                stat_replay_failure_bag_group_by_mode, fail, mode)
                     if workflow_type != 'probe_detect':
                         add_value_to_dict(stat_failure_bag_group_by_type, fail,
                                           workflow_type)
@@ -475,17 +477,18 @@ class StatPod(FlatMapFunction):
                     self.today_failure_pods.put(workflow_id, category)
                 add_value_to_dict(stat_failure_pod_group_by_type, 1,
                                   workflow_type)
-                add_value_to_dict(stat_replay_failure_bag_group_by_category,
-                                  bag_nums, category)
-                if mode is not None:
-                    add_value_to_dict(stat_replay_failure_bag_group_by_mode,
-                                      bag_nums, mode)
+                if workflow_type == 'replay':
+                    add_value_to_dict(stat_replay_failure_bag_group_by_category,
+                                    bag_nums, category)
+                    if mode is not None:
+                        add_value_to_dict(stat_replay_failure_bag_group_by_mode,
+                                        bag_nums, mode)
                 if workflow_type != 'probe_detect':
                     add_value_to_dict(stat_failure_bag_group_by_type, bag_nums,
                                       workflow_type)
 
             # consuming
-            if bags_profile_summary is not None:
+            if workflow_type=='replay' and bags_profile_summary is not None:
                 stat_replay_time_consuming_group_by_category = merge_dicts({
                     device: {
                         category: bags_profile_summary
