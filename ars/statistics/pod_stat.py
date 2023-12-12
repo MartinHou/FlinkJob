@@ -583,7 +583,7 @@ def analyse(env: StreamExecutionEnvironment):
 
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
-    env.set_parallelism(8)
+    env.set_parallelism(4)
     # env.add_jars("file://" + FLINK_SQL_CONNECTOR_KAFKA_LOC)
     analyse(env)
     env.execute("stat_pod")

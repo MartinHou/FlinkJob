@@ -1,5 +1,6 @@
 apache-flink
 kafka-python
+tenacity==8.0.1
 # sqlalchemy==1.4.39 
 # yapf==0.25.0
 # beautifultable

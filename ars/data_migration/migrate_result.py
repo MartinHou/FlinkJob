@@ -5,7 +5,8 @@ from pyflink.common import RowKind, Row
 
 def run():
     env = StreamExecutionEnvironment.get_execution_environment()
-    env.enable_checkpointing(3000)
+    env.enable_checkpointing(5000)
+    env.set_parallelism(1)
     
     table_env = StreamTableEnvironment.create(env)
 
@@ -30,7 +31,8 @@ def run():
             'username' = 'root',
             'password' = 'DDInfraARS123',
             'database-name' = 'ars_prod',
-            'table-name' = 'result'
+            'table-name' = 'result',
+            'scan.incremental.snapshot.chunk.size' = '512'
         );
     """)
     
