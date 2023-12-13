@@ -3,12 +3,11 @@ import pandas as pd
 import json
 from collections import defaultdict
 from beautifultable import BeautifulTable
-
 """
 Compare statistics between prod and local
 """
 
-START,END = '2023-11-20', '2023-11-21'
+START, END = '2023-11-20', '2023-11-21'
 
 prod_sql = f"""
 SELECT name,info FROM statistics

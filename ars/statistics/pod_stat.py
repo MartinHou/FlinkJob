@@ -7,11 +7,12 @@ from configs import (
     KAFKA_TOPIC_OF_ARS_WORKFLOW,
     # FLINK_SQL_CONNECTOR_KAFKA_LOC,
     ARS_HOST,
-    ARS_API_ROOT_TOKEN
-)
+    ARS_API_ROOT_TOKEN)
 from datetime import datetime, timedelta
 from lib.dates import (
-    str_to_datetime, datetime_to_str, dt_to_dayobj,
+    str_to_datetime,
+    datetime_to_str,
+    dt_to_dayobj,
 )
 from lib.schema import TEST_ARS_WORKFLOW_SCHEMA
 from lib.kafka import get_flink_kafka_consumer
@@ -118,9 +119,11 @@ class StatPod(FlatMapFunction):
                 "yesterday_stat_replay_time_consuming_group_by_category",
                 Types.STRING()))
         self.today_success_pods = ctx.get_map_state(
-            MapStateDescriptor("today_success_pods", Types.STRING(), Types.STRING()))
+            MapStateDescriptor("today_success_pods", Types.STRING(),
+                               Types.STRING()))
         self.today_failure_pods = ctx.get_map_state(
-            MapStateDescriptor("today_failure_pods", Types.STRING(), Types.STRING()))
+            MapStateDescriptor("today_failure_pods", Types.STRING(),
+                               Types.STRING()))
         self.yesterday_dt = ctx.get_state(
             ValueStateDescriptor("yesterday_dt", Types.STRING()))
         self.today_dt = ctx.get_state(
@@ -223,7 +226,8 @@ class StatPod(FlatMapFunction):
                 name='stat_success_pod_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_success_pod_group_by_type.value())),
+                info=json.loads(
+                    self.today_stat_success_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -232,7 +236,8 @@ class StatPod(FlatMapFunction):
                 name='stat_success_pod_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_success_pod_group_by_type.value())),
+                info=json.loads(
+                    self.yesterday_stat_success_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -241,7 +246,8 @@ class StatPod(FlatMapFunction):
                 name='stat_failure_pod_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_failure_pod_group_by_type.value())),
+                info=json.loads(
+                    self.today_stat_failure_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -250,7 +256,8 @@ class StatPod(FlatMapFunction):
                 name='stat_failure_pod_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_failure_pod_group_by_type.value())),
+                info=json.loads(
+                    self.yesterday_stat_failure_pod_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -259,8 +266,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_success_bag_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_success_bag_group_by_category.
-                value())),
+                info=json.loads(
+                    self.today_stat_replay_success_bag_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -269,8 +277,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_success_bag_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_replay_success_bag_group_by_category.
-                value())),
+                info=json.loads(
+                    self.yesterday_stat_replay_success_bag_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -279,8 +288,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_failure_bag_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_failure_bag_group_by_category.
-                value())),
+                info=json.loads(
+                    self.today_stat_replay_failure_bag_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -289,8 +299,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_failure_bag_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_replay_failure_bag_group_by_category.
-                value())),
+                info=json.loads(
+                    self.yesterday_stat_replay_failure_bag_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -299,7 +310,8 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_success_bag_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_success_bag_group_by_mode.value())),
+                info=json.loads(
+                    self.today_stat_replay_success_bag_group_by_mode.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -308,8 +320,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_success_bag_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_replay_success_bag_group_by_mode.
-                value())),
+                info=json.loads(
+                    self.yesterday_stat_replay_success_bag_group_by_mode.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -318,7 +331,8 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_failure_bag_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_failure_bag_group_by_mode.value())),
+                info=json.loads(
+                    self.today_stat_replay_failure_bag_group_by_mode.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -327,8 +341,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_failure_bag_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_replay_failure_bag_group_by_mode.
-                value())),
+                info=json.loads(
+                    self.yesterday_stat_replay_failure_bag_group_by_mode.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -337,7 +352,8 @@ class StatPod(FlatMapFunction):
                 name='stat_success_bag_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_success_bag_group_by_type.value())),
+                info=json.loads(
+                    self.today_stat_success_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -346,7 +362,8 @@ class StatPod(FlatMapFunction):
                 name='stat_success_bag_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_success_bag_group_by_type.value())),
+                info=json.loads(
+                    self.yesterday_stat_success_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -355,7 +372,8 @@ class StatPod(FlatMapFunction):
                 name='stat_failure_bag_group_by_type',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_failure_bag_group_by_type.value())),
+                info=json.loads(
+                    self.today_stat_failure_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -364,7 +382,8 @@ class StatPod(FlatMapFunction):
                 name='stat_failure_bag_group_by_type',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.yesterday_stat_failure_bag_group_by_type.value())),
+                info=json.loads(
+                    self.yesterday_stat_failure_bag_group_by_type.value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -373,8 +392,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_time_consuming_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_time_consuming_group_by_category.
-                value())),
+                info=json.loads(
+                    self.today_stat_replay_time_consuming_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -383,9 +403,9 @@ class StatPod(FlatMapFunction):
                 name='stat_replay_time_consuming_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.
-                yesterday_stat_replay_time_consuming_group_by_category.
-                value())),
+                info=json.loads(
+                    self.yesterday_stat_replay_time_consuming_group_by_category
+                    .value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
 
     def flat_map(self, value):
@@ -429,7 +449,9 @@ class StatPod(FlatMapFunction):
                                   workflow_type)
                 if is_today:
                     if self.today_failure_pods.contains(workflow_id):
-                        add_value_to_dict(stat_failure_pod_group_by_type, -1, self.today_failure_pods.get(workflow_id))
+                        add_value_to_dict(
+                            stat_failure_pod_group_by_type, -1,
+                            self.today_failure_pods.get(workflow_id))
                         self.today_failure_pods.remove(workflow_id)
                     elif self.today_success_pods.contains(workflow_id):
                         return
@@ -447,7 +469,8 @@ class StatPod(FlatMapFunction):
                             category)
                         if mode is not None:
                             add_value_to_dict(
-                                stat_replay_success_bag_group_by_mode, succ, mode)
+                                stat_replay_success_bag_group_by_mode, succ,
+                                mode)
                     if workflow_type != 'probe_detect':
                         add_value_to_dict(stat_success_bag_group_by_type, succ,
                                           workflow_type)
@@ -458,7 +481,8 @@ class StatPod(FlatMapFunction):
                             category)
                         if mode is not None:
                             add_value_to_dict(
-                                stat_replay_failure_bag_group_by_mode, fail, mode)
+                                stat_replay_failure_bag_group_by_mode, fail,
+                                mode)
                     if workflow_type != 'probe_detect':
                         add_value_to_dict(stat_failure_bag_group_by_type, fail,
                                           workflow_type)
@@ -466,7 +490,9 @@ class StatPod(FlatMapFunction):
             elif workflow_status == 'FAILURE':
                 if is_today:
                     if self.today_success_pods.contains(workflow_id):
-                        add_value_to_dict(stat_success_pod_group_by_type, -1, self.today_success_pods.get(workflow_id))
+                        add_value_to_dict(
+                            stat_success_pod_group_by_type, -1,
+                            self.today_success_pods.get(workflow_id))
                         self.today_success_pods.remove(workflow_id)
                     elif self.today_failure_pods.contains(workflow_id):
                         return
@@ -474,17 +500,19 @@ class StatPod(FlatMapFunction):
                 add_value_to_dict(stat_failure_pod_group_by_type, 1,
                                   workflow_type)
                 if workflow_type == 'replay':
-                    add_value_to_dict(stat_replay_failure_bag_group_by_category,
-                                    bag_nums, category)
+                    add_value_to_dict(
+                        stat_replay_failure_bag_group_by_category, bag_nums,
+                        category)
                     if mode is not None:
-                        add_value_to_dict(stat_replay_failure_bag_group_by_mode,
-                                        bag_nums, mode)
+                        add_value_to_dict(
+                            stat_replay_failure_bag_group_by_mode, bag_nums,
+                            mode)
                 if workflow_type != 'probe_detect':
                     add_value_to_dict(stat_failure_bag_group_by_type, bag_nums,
                                       workflow_type)
 
             # consuming
-            if workflow_type=='replay' and bags_profile_summary is not None:
+            if workflow_type == 'replay' and bags_profile_summary is not None:
                 stat_replay_time_consuming_group_by_category = merge_dicts({
                     device: {
                         category: bags_profile_summary
@@ -540,16 +568,17 @@ class StatPod(FlatMapFunction):
                    self.yesterday_stat_failure_bag_group_by_type,
                    self.yesterday_stat_replay_time_consuming_group_by_category)
         elif daydt_str == self.today_dt.value():
-            update(self.today_stat_success_pod_group_by_type,
-                   self.today_stat_failure_pod_group_by_type,
-                   self.today_stat_replay_success_bag_group_by_category,
-                   self.today_stat_replay_failure_bag_group_by_category,
-                   self.today_stat_replay_success_bag_group_by_mode,
-                   self.today_stat_replay_failure_bag_group_by_mode,
-                   self.today_stat_success_bag_group_by_type,
-                   self.today_stat_failure_bag_group_by_type,
-                   self.today_stat_replay_time_consuming_group_by_category,
-                   is_today=True)
+            update(
+                self.today_stat_success_pod_group_by_type,
+                self.today_stat_failure_pod_group_by_type,
+                self.today_stat_replay_success_bag_group_by_category,
+                self.today_stat_replay_failure_bag_group_by_category,
+                self.today_stat_replay_success_bag_group_by_mode,
+                self.today_stat_replay_failure_bag_group_by_mode,
+                self.today_stat_success_bag_group_by_type,
+                self.today_stat_failure_bag_group_by_type,
+                self.today_stat_replay_time_consuming_group_by_category,
+                is_today=True)
         else:  # expired data
             return iter([])
 

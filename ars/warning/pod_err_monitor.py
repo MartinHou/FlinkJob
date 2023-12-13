@@ -13,7 +13,6 @@ from pyflink.datastream.state import MapStateDescriptor, ValueStateDescriptor
 from pyflink.datastream.window import SlidingProcessingTimeWindows
 from typing import Optional, List
 import requests
-
 """
 This job does not depend on outside files to avoid bugs, though redundant.
 """
@@ -97,7 +96,7 @@ class PodErrMonitor(ProcessWindowFunction):
     warning_chat_group = "oc_d29ae06fec6bc5d6a35583157cea6285"  # [ SRE & ARS ] ARS 生产集群讨论群
     warning_assignees = [
         "ou_0c135f719351847da272c21880f9b96f",  # peter.huang
-        "ou_cb867b8fedad86c53850ad776877aba7"   # hanwen.qiu
+        "ou_cb867b8fedad86c53850ad776877aba7"  # hanwen.qiu
     ]
 
     def __init__(self, window_size, window_slide):

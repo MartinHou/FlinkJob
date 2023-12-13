@@ -4,11 +4,10 @@ from pyflink.datastream import (StreamExecutionEnvironment, FlatMapFunction,
                                 RuntimeContext, ProcessFunction)
 from pyflink.datastream.state import ValueStateDescriptor, ValueState
 from configs import (
-    KAFKA_TOPIC_OF_ARS_BAG, 
-    # FLINK_SQL_CONNECTOR_KAFKA_LOC, 
+    KAFKA_TOPIC_OF_ARS_BAG,
+    # FLINK_SQL_CONNECTOR_KAFKA_LOC,
     ARS_HOST,
-    ARS_API_ROOT_TOKEN
-)
+    ARS_API_ROOT_TOKEN)
 from datetime import datetime, timedelta
 from lib.dates import (
     datetime_to_str,
@@ -141,8 +140,9 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_success_bag_duration_group_by_mode.
-                value())),
+                info=json.loads(
+                    self.today_stat_replay_success_bag_duration_group_by_mode.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -151,9 +151,10 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_success_bag_duration_group_by_mode',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.
-                yesterday_stat_replay_success_bag_duration_group_by_mode.
-                value())),
+                info=json.loads(
+                    self.
+                    yesterday_stat_replay_success_bag_duration_group_by_mode.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -162,9 +163,10 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.
-                today_stat_replay_success_bag_duration_group_by_category.
-                value())),
+                info=json.loads(
+                    self.
+                    today_stat_replay_success_bag_duration_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -173,9 +175,10 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_success_bag_duration_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.
-                yesterday_stat_replay_success_bag_duration_group_by_category.
-                value())),
+                info=json.loads(
+                    self.
+                    yesterday_stat_replay_success_bag_duration_group_by_category
+                    .value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -184,8 +187,9 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.today_dt.value(),
-                info=json.loads(self.today_stat_replay_error_bag_count_group_by_category.
-                value())),
+                info=json.loads(
+                    self.today_stat_replay_error_bag_count_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
         http_request(
             method='POST',
@@ -194,9 +198,10 @@ class StatBag(FlatMapFunction):
                 name='stat_replay_error_bag_count_group_by_category',
                 period='daily',
                 stat_date=self.yesterday_dt.value(),
-                info=json.loads(self.
-                yesterday_stat_replay_error_bag_count_group_by_category.
-                value())),
+                info=json.loads(
+                    self.
+                    yesterday_stat_replay_error_bag_count_group_by_category.
+                    value())),
             headers={'Authorization': 'Token ' + ARS_API_ROOT_TOKEN})
 
     def flat_map(self, value):

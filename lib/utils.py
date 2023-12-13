@@ -75,13 +75,12 @@ def merge_dicts(dict1, dict2):
     for key in set(dict1.keys()).union(set(dict2.keys())):
         if key in dict1 and key in dict2:
             # 如果key对应的值是int或float，则直接相加
-            if isinstance(dict1[key], (int, float)) and isinstance(
-                    dict2[key], (int, float)):
+            if isinstance(dict1[key],
+                          (int, float)) and isinstance(dict2[key],
+                                                       (int, float)):
                 merged[key] = dict1[key] + dict2[key]
             # 如果key对应的值仍然是字典，则递归处理
-            elif all(
-                    isinstance(dict_[key], dict)
-                    for dict_ in [dict1, dict2]):
+            elif all(isinstance(dict_[key], dict) for dict_ in [dict1, dict2]):
                 merged[key] = merge_dicts(dict1[key], dict2[key])
             else:
                 # 保留有该key的那个dict的值

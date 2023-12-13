@@ -7,9 +7,9 @@ def run():
     env = StreamExecutionEnvironment.get_execution_environment()
     env.enable_checkpointing(30000)
     env.set_parallelism(1)
-    
+
     table_env = StreamTableEnvironment.create(env)
-    
+
     table_env.execute_sql("""
         CREATE TABLE src_workflow (
             workflow_id STRING,
@@ -46,23 +46,24 @@ def run():
             'scan.startup.mode' = 'earliest-offset'
         );
     """)
-    
-    table_env.execute_sql("CREATE CATALOG iceberg WITH ("
-                      "'type'='iceberg', "
-                      "'catalog-type'='hive', "
-                      "'uri'='thrift://100.68.81.171:9083',"
-                      "'warehouse'='tos://ddinfra-iceberg-test-tos/warehouse',"
-                      "'format-version'='2')")
-    
-    def filter_delete(x:Row):
-        return x.get_row_kind().name!=RowKind.DELETE.name
-        
+
+    table_env.execute_sql(
+        "CREATE CATALOG iceberg WITH ("
+        "'type'='iceberg', "
+        "'catalog-type'='hive', "
+        "'uri'='thrift://100.68.81.171:9083',"
+        "'warehouse'='tos://ddinfra-iceberg-test-tos/warehouse',"
+        "'format-version'='2')")
+
+    def filter_delete(x: Row):
+        return x.get_row_kind().name != RowKind.DELETE.name
+
     change_log_table = table_env.sql_query("SELECT * FROM src_workflow")
     ds = table_env.to_changelog_stream(change_log_table).filter(filter_delete)
     filtered_table = table_env.from_changelog_stream(ds)
-    
+
     table_env.create_temporary_view("src", filtered_table)
-    
+
     table_env.execute_sql("""
                           INSERT INTO iceberg.ars.workflows
                           SELECT 
@@ -90,7 +91,7 @@ def run():
                             metric
                           FROM src
                           """)
-    
-    
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     run()
