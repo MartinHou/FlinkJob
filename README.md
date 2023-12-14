@@ -25,3 +25,9 @@ Check setup/setup.sh and put jars under flink-1.x.x/lib.
 or
 
 ```flink run -py xx.py [-pyfs abs_path_to_proj]```
+
+# Future
+
+- Add metric reporters like Prometheus, so that warnings can be sent upon task failures.
+- High-availability using k8s or zookeeper.
+- Save checkpoints on hdfs rather than local file system.
