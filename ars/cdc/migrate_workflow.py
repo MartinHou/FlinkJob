@@ -46,6 +46,8 @@ def run():
             'scan.startup.mode' = 'earliest-offset'
         );
     """)
+    # Removing scan.startup.mode will start scanning the whole table. 
+    # It is required if binlog is newer than newest synced data in Iceberg.
 
     table_env.execute_sql(
         "CREATE CATALOG iceberg WITH ("
@@ -64,6 +66,8 @@ def run():
 
     table_env.create_temporary_view("src", filtered_table)
 
+    # upload_ttl was mistakenly set to Int in Iceberg while it is Double in MySQL.
+    # So we need to convert the type or convert the type in either of the db.
     table_env.execute_sql("""
                           INSERT INTO iceberg.ars.workflows
                           SELECT 

@@ -35,6 +35,8 @@ def run():
             'scan.startup.mode' = 'earliest-offset'
         );
     """)
+    # Removing scan.startup.mode will start scanning the whole table. 
+    # It is required if binlog is newer than newest synced data in Iceberg.
 
     table_env.execute_sql(
         "CREATE CATALOG iceberg WITH ("
